@@ -61,13 +61,18 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="glib-2.0.lib gobject-2.0.lib gmodule-2.0.lib gdk-win32-2.0.lib gtk-win32-2.0.lib freetype.lib fontconfig.lib art_lgpl_2.lib atk-1.0.lib pangowin32-1.0.lib pango-1.0.lib gdk_pixbuf-2.0.lib pangoft2-1.0.lib"
+				AdditionalDependencies="glib-2.0.lib gobject-2.0.lib gmodule-2.0.lib gdk-win32-2.0.lib gtk-win32-2.0.lib freetype.lib fontconfig.lib art_lgpl_2.lib atk-1.0.lib pangowin32-1.0.lib pango-1.0.lib gdk_pixbuf-2.0.lib pangoft2-1.0.lib msvcrtd.lib"
 				OutputFile="$(OutDir)\libgnomecanvas-2-0.dll"
 				LinkIncremental="2"
 				AdditionalLibraryDirectories="$(LIB)"
+				GenerateManifest="false"
+				IgnoreAllDefaultLibraries="true"
+				ModuleDefinitionFile="$(ProjectDir)gnomecanvas.def"
 				GenerateDebugInformation="true"
 				SubSystem="2"
+				ImportLibrary="$(TargetDir)gnomecanvas-2.0.lib"
 				TargetMachine="1"
+				AllowIsolation="true"
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -138,15 +143,20 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="glib-2.0.lib gobject-2.0.lib gmodule-2.0.lib gdk-win32-2.0.lib gtk-win32-2.0.lib freetype.lib fontconfig.lib art_lgpl_2.lib atk-1.0.lib pangowin32-1.0.lib pango-1.0.lib gdk_pixbuf-2.0.lib pangoft2-1.0.lib"
+				AdditionalDependencies="glib-2.0.lib gobject-2.0.lib gmodule-2.0.lib gdk-win32-2.0.lib gtk-win32-2.0.lib freetype.lib fontconfig.lib art_lgpl_2.lib atk-1.0.lib pangowin32-1.0.lib pango-1.0.lib gdk_pixbuf-2.0.lib pangoft2-1.0.lib msvcrt.lib"
 				OutputFile="$(OutDir)\libgnomecanvas-2-0.dll"
 				LinkIncremental="1"
 				AdditionalLibraryDirectories="$(LIB)"
+				GenerateManifest="false"
+				IgnoreAllDefaultLibraries="true"
+				ModuleDefinitionFile="$(ProjectDir)gnomecanvas.def"
 				GenerateDebugInformation="true"
 				SubSystem="2"
 				OptimizeReferences="2"
 				EnableCOMDATFolding="2"
+				ImportLibrary="$(TargetDir)gnomecanvas-2.0.lib"
 				TargetMachine="1"
+				AllowIsolation="true"
 			/>
 			<Tool
 				Name="VCALinkTool"
