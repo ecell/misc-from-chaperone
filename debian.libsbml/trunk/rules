@@ -1,0 +1,156 @@
+#!/usr/bin/make -f
+# -*- makefile -*-
+# Sample debian/rules that uses debhelper.
+# GNU copyright 1997 to 1999 by Joey Hess.
+
+# Uncomment this to turn on verbose mode.
+#export DH_VERBOSE=1
+
+
+# These are used for cross-compiling and for saving the configure script
+# from having to guess our platform (since we know it already)
+DEB_HOST_GNU_TYPE   ?= $(shell dpkg-architecture -qDEB_HOST_GNU_TYPE)
+DEB_BUILD_GNU_TYPE  ?= $(shell dpkg-architecture -qDEB_BUILD_GNU_TYPE)
+
+
+CFLAGS = -Wall -g
+
+ifneq (,$(findstring noopt,$(DEB_BUILD_OPTIONS)))
+	CFLAGS += -O0
+else
+	CFLAGS += -O2
+endif
+ifeq (,$(findstring nostrip,$(DEB_BUILD_OPTIONS)))
+	INSTALL_PROGRAM += -s
+endif
+
+# shared library versions, option 1
+version=2.3.4
+major=2
+# option 2, assuming the library is created as src/.libs/libfoo.so.2.0.5 or so
+#version=`ls src/.libs/lib*.so.* | \
+# awk '{if (match($$0,/[0-9]+\.[0-9]+\.[0-9]+$$/)) print substr($$0,RSTART)}'`
+#major=`ls src/.libs/lib*.so.* | \
+# awk '{if (match($$0,/\.so\.[0-9]+$$/)) print substr($$0,RSTART+4)}'`
+
+
+patch: patch-stamp
+patch-stamp:
+	dpatch apply-all
+	libtoolize -c -f
+	aclocal -I config
+	autoconf
+	touch patch-stamp
+
+config.status: patch configure
+	dh_testdir
+	# Add here commands to configure the package.
+	CFLAGS="$(CFLAGS)" LDFLAGS="-Wl,-z,defs"
+	./configure --host=$(DEB_HOST_GNU_TYPE) \
+	            --build=$(DEB_BUILD_GNU_TYPE) \
+	            --prefix=/usr \
+	            --mandir=\$${prefix}/share/man \
+	            --infodir=\$${prefix}/share/info \
+	            --with-swig=/usr \
+	            --with-perl=/usr \
+	            --with-python=/usr \
+	            --with-java=/usr
+
+build: build-stamp build-stamp-indep
+build-stamp: config.status
+	dh_testdir
+	$(MAKE) all DESTDIR=$(CURDIR)/debian/tmp/
+	touch build-stamp
+
+build-indep: build-stamp-indep
+build-stamp-indep: config.status
+	dh_testdir
+	-$(MAKE) docs 
+	touch build-stamp-indep
+
+unpatch:
+	# Unpatch after distclean
+	dpatch deapply-all
+	rm -rf patch-stamp debian/patched
+
+distclean:
+	dh_testdir
+	dh_testroot
+	-([ -r Makefile ] && $(MAKE) distclean)
+	-(cd examples && $(MAKE) clean)
+
+clean: distclean unpatch
+	dh_testdir
+	dh_testroot
+	rm -f build-stamp
+	rm -f build-stamp-indep
+	rm -f config.status
+	rm -f config.log
+	# Clean not sufficient for dpkg-sources diff
+	rm -rf docs/src/libsbml-manual/ docs/src/libsbml-manual.pdf docs/formatted/libsbml-manual.pdf debian/libsbml-java
+	dh_clean `find . -name "*.a" -o -name "*.la" -o -name "*pdf" -o -name "*.aux" -o -name "*.dvi" `
+#	rm -f src/bindings/java/Makefile \
+#	      src/bindings/java/libsbml_wrap.cpp \
+#	      src/bindings/java/javadoc.i \
+#	      src/bindings/lisp/libsbml-config.lisp \
+#	      src/bindings/lisp/Makefile \
+#	      src/bindings/lisp/libsbml-config-run.lisp \
+#	      src/bindings/lisp/build.lisp
+#	rm -f src/bindings/perl/Makefile.PL \
+#	      src/bindings/matlab/test/Makefile \
+#	      src/bindings/matlab/Makefile \
+#	      src/bindings/python/pydoc.i \
+#	      src/bindings/python/libsbml_wrap.cpp
+#	rm -f src/bindings/python/libsbml.py \
+#	      src/sbml/layout/test/Makefile \
+#	      src/sbml/layout/Makefile \
+#	      docs/src/tex/libsbmlextras.sty \
+#	      src/common/libsbml-package.h \
+#	      aclocal.m4
+#	rm -f win32/*/Makefile \
+#	      libsbml-2.3.4/ltmain.sh \
+#	      config.guess \
+#	      config.sub \
+#	      config/makefile-common-vars.mk
+#	rm -f ltmain.sh \
+#	      src/common/libsbml-config-unix.h \
+#	      configure \
+#	      acinclude.m4 
+
+install: build
+	dh_testdir
+	dh_testroot
+	dh_clean -k 
+	dh_installdirs
+	# Add here commands to install the package into debian/tmp
+	$(MAKE) install DESTDIR=$(CURDIR)/debian/tmp/
+	$(MAKE) install-docs DESTDIR=$(CURDIR)/debian/tmp/
+
+# Build architecture-independent files here.
+binary-indep: build-indep install
+	# Well, if I would need to separate the make install header files from the remainder
+	# and I do not like tampering too much with upstream source.
+
+# Build architecture-dependent files here.
+binary-arch: build install
+	dh_testdir
+	dh_testroot
+	dh_installchangelogs
+	dh_installdocs
+	dh_installexamples
+	dh_install -Xlibsbml-java --sourcedir=$(CURDIR)/debian/tmp
+	dh_link
+	dh_strip
+	dh_compress
+	dh_fixperms
+	dh_perl
+	dh_pysupport
+	dh_makeshlibs
+	dh_installdeb
+	dh_shlibdeps
+	dh_gencontrol
+	dh_md5sums
+	dh_builddeb
+
+binary: binary-indep binary-arch
+.PHONY: build clean binary-indep binary-arch binary install patch unpatch
