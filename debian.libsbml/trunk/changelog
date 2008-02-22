@@ -1,3 +1,10 @@
+libsbml (2.3.5-1) gutsy; urgency=low
+
+  [Moriyoshi Koizumi]
+  * Upstream update.
+
+ -- Moriyoshi Koizumi <mozo@sfc.keio.ac.jp>  Fri, 22 Feb 2008 15:37:57 +0900
+
 libsbml (2.3.4-2) unstable; urgency=low
 
   [ Moriyoshi Koizumi ]
