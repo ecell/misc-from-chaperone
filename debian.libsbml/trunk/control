@@ -3,9 +3,8 @@ Priority: optional
 Maintainer: Steffen Moeller <moeller@pzr.uni-rostock.de>, Changyan Xie <panchoat@gmail.com>, Moriyoshi Koizumi <mozo@sfc.keio.ac.jp>
 Build-Depends: debhelper (>= 4.0.0), dpatch,
  autoconf, automake, libtool (>= 1.5.0), build-essential,
- libxerces23-dev | libxerces24-dev | libxerces25-dev | libxerces26-dev |
- libxerces27-dev, swig, python-dev, libperl-dev, java-compiler, fastjar,
- python-support (>= 0.3), tetex-bin, tetex-extra, latex2html, doxygen
+ libxerces27-dev, swig, python-dev, libperl-dev, java-gcj-compat-dev | java-sdk,
+ fastjar, python-support (>= 0.3), tetex-bin, tetex-extra, latex2html, doxygen
 Standards-Version: 3.7.2
 Section: contrib/science
 XS-Vcs-Browser: http://svn.debian.org/wsvn/debian-med/trunk/packages/libsbml/trunk/

@@ -1,3 +1,10 @@
+#! /bin/sh /usr/share/dpatch/dpatch-run
+## swig_java_proto.dpatch by Moriyoshi Koizumi <mozo@sfc.keio.ac.jp>
+##
+## All lines beginning with `## DP:' are a description of the patch.
+## DP: No description.
+
+@DPATCH@
 --- libsbml-2.3.4.orig/src/bindings/java/local.i	2005-10-04 00:36:52.000000000 +0900
 +++ libsbml-2.3.4/src/bindings/java/local.i	2007-07-12 00:53:27.536648170 +0900
 @@ -106,11 +106,11 @@
