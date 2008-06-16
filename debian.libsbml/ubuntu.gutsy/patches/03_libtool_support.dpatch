@@ -1,0 +1,988 @@
+#! /bin/sh
+## 03_libtool_support.dpatch by  <mozo@sfc.keio.ac.jp>
+##
+## All lines beginning with `## DP:' are a description of the patch.
+## DP: No description.
+
+/bin/sh -c '. /usr/share/dpatch/dpatch-run' $0 $@
+
+if [ "x$1" = "x-patch" ]; then
+  chmod ugo+rx install-sh mkinstalldirs
+fi
+
+exit 0
+
+@DPATCH@
+diff -urNad libsbml-2.3.4~/acinclude.m4 libsbml-2.3.4/acinclude.m4
+--- libsbml-2.3.4~/acinclude.m4	1970-01-01 09:00:00.000000000 +0900
++++ libsbml-2.3.4/acinclude.m4	2007-01-22 14:31:42.000000000 +0900
+@@ -0,0 +1,23 @@
++# generated automatically by aclocal 1.8.5 -*- Autoconf -*-
++
++# Copyright (C) 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004
++# Free Software Foundation, Inc.
++# This file is free software; the Free Software Foundation
++# gives unlimited permission to copy and/or distribute it,
++# with or without modifications, as long as this notice is preserved.
++
++# This program is distributed in the hope that it will be useful,
++# but WITHOUT ANY WARRANTY, to the extent permitted by law; without
++# even the implied warranty of MERCHANTABILITY or FITNESS FOR A
++# PARTICULAR PURPOSE.
++
++m4_include([config/expat.m4])
++m4_include([config/java.m4])
++m4_include([config/libcheck.m4])
++m4_include([config/lisp.m4])
++m4_include([config/matlab.m4])
++m4_include([config/perl.m4])
++m4_include([config/python.m4])
++m4_include([config/runldpath.m4])
++m4_include([config/swig.m4])
++m4_include([config/xercesc.m4])
+diff -urNad libsbml-2.3.4~/config/makefile-common-actions.mk libsbml-2.3.4/config/makefile-common-actions.mk
+--- libsbml-2.3.4~/config/makefile-common-actions.mk	2007-01-22 14:30:24.000000000 +0900
++++ libsbml-2.3.4/config/makefile-common-actions.mk	2007-01-22 14:31:42.000000000 +0900
+@@ -65,7 +65,7 @@
+ # -----------------------------------------------------------------------------
+ 
+ .SUFFIXES:
+-.SUFFIXES: .a .so .dylib .jnilib .c .h .cpp .hpp .o .obj .Po .py .pyc .pyo .i
++.SUFFIXES: .a .so .dylib .jnilib .c .h .cpp .hpp .o .lo .obj .Po .py .pyc .pyo .i
+ 
+ # The following define default values of variables like `cxxcompile'.  An
+ # enclosing makefile can define other values, in which case those
+@@ -75,24 +75,22 @@
+ 
+ # Compiling under cygwin doesn't need -fPIC.
+ 
+-ifneq "$(HOST_TYPE)" "cygwin"
+-  FPIC = -fPIC
+-endif
+-
+ # Here follow the generic compilation commands.
+ 
+-compile ?= $(CC) $(extra_CPPFLAGS) $(extra_CFLAGS) $(default_includes) \
+-	$(CPPFLAGS) $(CFLAGS) $(INCLUDES) $(FPIC)
++compile ?= $(LIBTOOL) --mode=compile $(CC) $(extra_CPPFLAGS) $(extra_CFLAGS) \
++    $(default_includes) $(CPPFLAGS) $(CFLAGS) $(INCLUDES)
++
++cxxcompile ?= $(LIBTOOL) --mode=compile $(CXX) $(extra_CPPFLAGS) \
++    $(extra_CXXFLAGS) $(default_includes) $(CPPFLAGS) $(CXXFLAGS) $(INCLUDES)
+ 
+-cxxcompile ?= $(CXX) $(extra_CPPFLAGS) $(extra_CXXFLAGS) $(default_includes) \
+-	 $(CPPFLAGS) $(CXXFLAGS) $(INCLUDES) $(FPIC)
+ 
+ # For linking libraries, we try to follow the result of the libtool
+ # numbering scheme, but at the final end, not in the input format.  (The
+ # libtool input format is peculiar to us.)  Curious, this makes the
+ # numbering very easy: it's a direct mapping of the libsbml version number.
+ 
+-library_version = $(PACKAGE_VERSION)
++empty =
++library_version = $(subst $(empty) $(empty),.,$(wordlist 1, 2, $(subst ., ,$(PACKAGE_VERSION)))).0
+ 
+ # `platform_link_flags' is used below in the definition of link_shared_lib.
+ # Generally, gcc and ld need -shared, but some systems think different.
+@@ -100,10 +98,9 @@
+ ifeq "$(HOST_TYPE)" "darwin"
+   # MacOS X's normal libraries have the extension .dylib, and "bundles"
+   # have .so.  The default shared library definition here builds .dylib.
+-  platform_link_flags ?= -dynamiclib -flat_namespace \
+-	-current_version $(library_version)
++  platform_link_flags ?= -dynamiclib -flat_namespace
+ else
+-  platform_link_flags ?= -shared
++  platform_link_flags ?=
+ endif
+ 
+ # The following defines the default function for linking objects into a
+@@ -114,8 +111,21 @@
+ 
+ ifndef link_shared_lib
+   define link_shared_lib 
+-    $(CXX) $(LDFLAGS) $(extra_LDFLAGS) $(platform_link_flags) \
+-	-o $(1) $(objfiles) $(extra_LIBS) $(LIBS)
++    $(LIBTOOL) --mode=link $(CXX) $(LDFLAGS) $(extra_LDFLAGS) \
++    -version-info $(subst .,:,$(library_version)) \
++    -inst-prefix-dir "$(DESTDIR)" \
++    $(platform_link_flags) -rpath $(LIBDIR) -o $(1) $(objfiles:.o=.lo) \
++    $(extra_LIBS) $(LIBS)
++  endef
++endif
++
++ifndef link_dl_lib
++  define link_dl_lib
++    $(LIBTOOL) --mode=link $(CXX) $(LDFLAGS) $(extra_LDFLAGS) \
++    -module -avoid-version -export-dynamic \
++    -inst-prefix-dir "$(DESTDIR)" \
++    $(platform_link_flags) -rpath $(abspath $(dir $(1))) \
++    -o $(1:.$(SHAREDLIBEXT)=.la) $(objfiles:.o=.lo) $(extra_LIBS) $(LIBS)
+   endef
+ endif
+ 
+@@ -127,8 +137,9 @@
+ 
+ define link_static_lib
+   -rm -f $(1)
+-  $(AR) -cru $(1) $(objfiles)
+-  $(RANLIB) $(1)
++  $(LIBTOOL) --mode=link $(CXX) $(LDFLAGS) $(extra_LDFLAGS) \
++  -static -inst-prefix-dir $(DESTDIR) \
++  $(platform_link_flags) -o $(1) $(objfiles:.o=.lo)
+ endef
+ 
+ # Most of the sources are a mix of C and C++ files.  They have separate
+@@ -138,16 +149,16 @@
+ # filter the results.  This abstracts out this common operation.
+ 
+ make_objects_list = \
+-  $(filter %.$(OBJEXT),\
+-    $(patsubst %.cpp,%.$(OBJEXT),$(1)) $(patsubst %.c,%.$(OBJEXT),$(1)))
++  $(filter %.lo,\
++    $(patsubst %.cpp,%.lo,$(1)) $(patsubst %.c,%.lo,$(1)))
+ 
+ # The following generate the list of object file names and dependency file
+ # names from the list of source files.  They're used for the generic
+ # compilation rules further below.
+ 
+-tmplist  ?= $(sources:.cpp=.$(OBJEXT)) $(sources:.c=.$(OBJEXT))
+-objfiles ?= $(filter %.$(OBJEXT),$(tmplist))
+-depfiles ?= $(addprefix $(DEPDIR)/,$(objfiles:.$(OBJEXT)=.$(DEPEXT)))
++tmplist  ?= $(sources:.cpp=.lo) $(sources:.c=.lo)
++objfiles ?= $(filter %.lo,$(tmplist))
++depfiles ?= $(addprefix $(DEPDIR)/,$(objfiles:.lo=.$(DEPEXT)))
+ 
+ # This next line includes the dependency files.  This doesn't use
+ # $depfiles, but rather a wildcard on the actual files, so that if they
+@@ -164,21 +175,21 @@
+ %.a ../%.a: $(objfiles)
+ 	$(call link_static_lib,$@)
+ 
+-%.so ../%.so: $(objfiles)
++%.la ../%.la: $(objfiles)
+ 	$(call link_shared_lib,$@)
+ 
+-%.$(JNIEXT) ../%.$(JNIEXT): $(objfiles)
+-	$(call link_shared_lib,$@)
++%.so ../%.la: $(objfiles)
++	$(call link_dl_lib,$@)
+ 
+-%.$(SHAREDLIBEXT) ../%.$(SHAREDLIBEXT): $(objfiles)
+-	$(call link_shared_lib,$@)
++%.$(JNIEXT) ../%.$(JNIEXT): $(objfiles)
++	$(call link_dl_lib,$@)
+ 
+ # The following define generic rules for creating object files.
+ 
+-.c.$(OBJEXT):
++.c.lo:
+ 	$(compile) -MT $@ -MD -MP -MF "$(DEPDIR)/$*.$(DEPEXT)" -c -o $@ $<
+ 
+-.cpp.$(OBJEXT):
++.cpp.lo:
+ 	$(cxxcompile) -MT $@ -MD -MP -MF "$(DEPDIR)/$*.$(DEPEXT)" -c -o $@ $<
+ 
+ .c.obj:
+@@ -281,18 +292,19 @@
+ 
+ define install_library
+   $(MKINSTALLDIRS) $(DESTDIR)$(LIBDIR)
+-  @if test "$(suffix $(1))" = ".so" -o "$(suffix $(1))" = ".dylib" -o "$(suffix $(1))" = ".jnilib"; then \
+-    finalname="$(notdir $(basename $(1))).$(library_version)$(suffix $(1))"; \
+-    echo $(INSTALL_SH) $(1) $(2)/$$finalname; \
+-    $(INSTALL_SH) $(1) $(2)/$$finalname; \
+-    echo $(install_strip) $(1) $(2)/$$finalname; \
+-    $(install_strip) $(1) $(2)/$$finalname; \
+-    echo ln -fs $$finalname $(2)/$(notdir $(1)); \
+-    ln -fs $$finalname $(2)/$(notdir $(1)); \
+-  else \
+-    echo $(INSTALL_SH) $(1) $(2); \
+-    $(INSTALL_SH) $(1) $(2); \
+-  fi
++  $(LIBTOOL) --mode=install $(INSTALL_SH) $(1) $(DESTDIR)/$(LIBDIR)
++#  @if test "$(suffix $(1))" = ".so" -o "$(suffix $(1))" = ".dylib" -o "$(suffix $(1))" = ".jnilib"; then \
++#    finalname="$(notdir $(basename $(1)))$(suffix $(1)).$(library_version)"; \
++#    echo $(INSTALL_SH) $(1) $(2)/$$finalname; \
++#    $(INSTALL_SH) $(1) $(2)/$$finalname; \
++#    echo $(install_strip) $(1) $(2)/$$finalname; \
++#    $(install_strip) $(1) $(2)/$$finalname; \
++#    echo ln -fs $$finalname $(2)/$(notdir $(1)); \
++#    ln -fs $$finalname $(2)/$(notdir $(1)); \
++#  else \
++#    echo $(INSTALL_SH) $(1) $(2); \
++#    $(INSTALL_SH) $(1) $(2); \
++#  fi
+ endef
+ 
+ to_install_libraries = $(addprefix install-,$(libraries))
+@@ -367,7 +379,7 @@
+ 
+ define uninstall_library
+   @if test -f $(1); then \
+-    finalname="$(notdir $(basename $(1))).$(library_version)$(suffix $(1))"; \
++    finalname="$(notdir $(basename $(1)))$(suffix $(1)).$(library_version)"; \
+     target="$(2)/$$finalname"; \
+     if test -f $$target ; then \
+       echo rm $$target; \
+@@ -514,7 +526,7 @@
+ clean-normal: mostlyclean clean-libraries clean-libtool clean-extras
+ 
+ clean-generic:
+-	-rm -f *.$(OBJEXT) core *.core
++	-rm -f *.lo *.$(OBJEXT) core *.core
+ 
+ clean-libtool:
+ 	-rm -rf .libs _libs
+diff -urNad libsbml-2.3.4~/config/makefile-common-vars.mk.in libsbml-2.3.4/config/makefile-common-vars.mk.in
+--- libsbml-2.3.4~/config/makefile-common-vars.mk.in	2007-01-22 14:30:24.000000000 +0900
++++ libsbml-2.3.4/config/makefile-common-vars.mk.in	2007-01-22 14:31:42.000000000 +0900
+@@ -149,7 +149,7 @@
+ SWIGFLAGS         = @SWIGFLAGS@
+ 
+ ACLOCAL           = @ACLOCAL@
+-ACLOCAL_FLAGS     = --acdir=$(top_srcdir)/config
++ACLOCAL_FLAGS     = -I $(top_srcdir)/config
+ ACLOCAL_M4        = $(top_srcdir)/aclocal.m4
+ AUTOCONF          = @AUTOCONF@
+ 
+@@ -178,10 +178,10 @@
+ HOST_TYPE         = @HOST_TYPE@
+ HOST_CPU          = @host_cpu@
+ INSTALL           = @INSTALL@
+-INSTALL_SH        = $(top_srcdir)/config/install-sh -c
++INSTALL_SH        = $(top_srcdir)/install-sh -c
+ LDFLAGS           = @LDFLAGS@
+ LIBS              = @LIBS@
+-MKINSTALLDIRS     = $(SHELL) $(top_srcdir)/config/mkinstalldirs
++MKINSTALLDIRS     = $(SHELL) $(top_srcdir)/mkinstalldirs
+ OBJEXT            = @OBJEXT@
+ PACKAGE           = @PACKAGE_TARNAME@
+ PACKAGE_BUGREPORT = @PACKAGE_BUGREPORT@
+@@ -189,8 +189,8 @@
+ PACKAGE_STRING    = @PACKAGE_STRING@
+ PACKAGE_TARNAME   = @PACKAGE_TARNAME@
+ PACKAGE_VERSION   = @PACKAGE_VERSION@
+-RANLIB            = @RANLIB@
+ SHAREDLIBEXT      = @SHAREDLIBEXT@
++LIBTOOL           = @LIBTOOL@
+ SHELL             = @SHELL@
+ 
+ 
+diff -urNad libsbml-2.3.4~/config/perl.m4 libsbml-2.3.4/config/perl.m4
+--- libsbml-2.3.4~/config/perl.m4	1970-01-01 09:00:00.000000000 +0900
++++ libsbml-2.3.4/config/perl.m4	2007-01-22 14:31:42.000000000 +0900
+@@ -0,0 +1,89 @@
++dnl
++dnl Filename    : perl.m4
++dnl Description : Autoconf macro to check for existence of Perl
++dnl Author(s)   : Mike Hucka
++dnl Organization: SBML Team
++dnl Created     : 2005-05-01
++dnl Revision    : $Id: perl.m4,v 1.1 2005/05/02 02:25:23 mhucka Exp $
++dnl Source      : $Source: /cvsroot/sbml/libsbml/config/perl.m4,v $
++dnl
++dnl Copyright 2005 California Institute of Technology and
++dnl Japan Science and Technology Corporation.
++dnl
++dnl This library is free software; you can redistribute it and/or modify it
++dnl under the terms of the GNU Lesser General Public License as published
++dnl by the Free Software Foundation; either version 2.1 of the License, or
++dnl any later version.
++dnl
++dnl This library is distributed in the hope that it will be useful, but
++dnl WITHOUT ANY WARRANTY, WITHOUT EVEN THE IMPLIED WARRANTY OF
++dnl MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE.  The software and
++dnl documentation provided hereunder is on an "as is" basis, and the
++dnl California Institute of Technology and Japan Science and Technology
++dnl Corporation have no obligations to provide maintenance, support,
++dnl updates, enhancements or modifications.  In no event shall the
++dnl California Institute of Technology or the Japan Science and Technology
++dnl Corporation be liable to any party for direct, indirect, special,
++dnl incidental or consequential damages, including lost profits, arising
++dnl out of the use of this software and its documentation, even if the
++dnl California Institute of Technology and/or Japan Science and Technology
++dnl Corporation have been advised of the possibility of such damage.  See
++dnl the GNU Lesser General Public License for more details.
++dnl
++dnl You should have received a copy of the GNU Lesser General Public License
++dnl along with this library; if not, write to the Free Software Foundation,
++dnl Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA.
++dnl
++dnl The original code contained here was initially developed by:
++dnl
++dnl     Michael Hucka
++dnl     SBML Team
++dnl     Control and Dynamical Systems, MC 107-81
++dnl     California Institute of Technology
++dnl     Pasadena, CA, 91125, USA
++dnl
++dnl     http://www.sbml.org
++dnl     mailto:sbml-team@caltech.edu
++dnl
++dnl Contributor(s):
++dnl
++
++dnl
++dnl Check --with-perl[=PREFIX]
++dnl
++
++AC_DEFUN([CONFIG_PROG_PERL],
++[
++  AC_ARG_VAR([PERL])
++
++  AC_ARG_WITH(perl,
++              AC_HELP_STRING([--with-perl=PREFIX],
++                             [Generate Perl interface library [[default=no]]]),
++	      [with_perl=$withval],
++	      [with_perl=no])
++
++  if test $with_perl != no; then
++
++    dnl Find a perl executable.
++
++    if test $with_perl != yes; then
++      AC_PATH_PROG([PERL], [perl], [$with_perl/bin/perl],
++                     [no-perl-found], [$with_perl/bin])
++    else
++      AC_PATH_PROG([PERL], [perl])
++    fi
++
++    AC_DEFINE([USE_PERL], 1, [Define to 1 to use Perl])
++    AC_SUBST(USE_PERL, 1)
++
++    AC_SUBST(PERL_CPPFLAGS)
++    AC_SUBST(PERL_LDFLAGS)
++    AC_SUBST(PERL_LIBS)
++
++  fi
++
++  dnl We record the USE_XXX flag, for later testing in Makefiles.
++
++  LIBSBML_OPTIONS="$LIBSBML_OPTIONS USE_PERL"
++
++])
+diff -urNad libsbml-2.3.4~/config/runldpath.m4 libsbml-2.3.4/config/runldpath.m4
+--- libsbml-2.3.4~/config/runldpath.m4	1970-01-01 09:00:00.000000000 +0900
++++ libsbml-2.3.4/config/runldpath.m4	2007-01-22 14:31:42.000000000 +0900
+@@ -0,0 +1,77 @@
++dnl
++dnl Filename    : runldpath.m4
++dnl Description : Autoconf macro to set special variable RUN_LDPATH
++dnl Author(s)   : Mike Hucka
++dnl Created     : 2005-04-30
++dnl Revision    : $Id: runldpath.m4,v 1.2 2005/05/01 22:25:56 mhucka Exp $
++dnl Source      : $Source: /cvsroot/sbml/libsbml/config/runldpath.m4,v $
++dnl
++dnl Copyright 2005 California Institute of Technology
++dnl
++dnl This library is free software; you can redistribute it and/or modify it
++dnl under the terms of the GNU Lesser General Public License as published
++dnl by the Free Software Foundation; either version 2.1 of the License, or
++dnl any later version.
++dnl
++dnl This library is distributed in the hope that it will be useful, but
++dnl WITHOUT ANY WARRANTY, WITHOUT EVEN THE IMPLIED WARRANTY OF
++dnl MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE.  The software and
++dnl documentation provided hereunder is on an "as is" basis, and the
++dnl California Institute of Technology and Japan Science and Technology
++dnl Corporation have no obligations to provide maintenance, support,
++dnl updates, enhancements or modifications.  In no event shall the
++dnl California Institute of Technology or the Japan Science and Technology
++dnl Corporation be liable to any party for direct, indirect, special,
++dnl incidental or consequential damages, including lost profits, arising
++dnl out of the use of this software and its documentation, even if the
++dnl California Institute of Technology and/or Japan Science and Technology
++dnl Corporation have been advised of the possibility of such damage.  See
++dnl the GNU Lesser General Public License for more details.
++dnl
++dnl You should have received a copy of the GNU Lesser General Public License
++dnl along with this library; if not, write to the Free Software Foundation,
++dnl Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA.
++dnl
++dnl The original code contained here was initially developed by:
++dnl
++dnl     Mike Hucka
++dnl     The SBML Team
++dnl     Control and Dynamical Systems, MC 107-81
++dnl     California Institute of Technology
++dnl     Pasadena, CA, 91125, USA
++dnl
++dnl     http://sbml.org
++dnl     mailto:sbml-team@caltech.edu
++dnl
++dnl Contributor(s):
++
++dnl CONFIG_LDPATH needs to be called from configure.ac to initialize the 
++dnl internal variable.  It needs to be called fairly early.
++
++AC_DEFUN([CONFIG_LDPATH],
++[
++  AC_DEFINE([RUN_LDPATH])
++
++  dnl The initial value is the user's LD_LIBRARY_PATH or DYLD_LIBRARY_PATH
++
++  case $host in
++  *darwin*) 
++    RUN_LDPATH="$DYLD_LIBRARY_PATH"
++    ;;
++  *)
++    RUN_LDPATH="$LD_LIBRARY_PATH"
++    ;;
++  esac
++
++  AC_SUBST(RUN_LDPATH)
++])
++
++
++dnl CONFIG_ADD_LDPATH(path) adds "path" to list of paths used to set
++dnl LD_LIBRARY_PATH.
++
++AC_DEFUN([CONFIG_ADD_LDPATH],
++[
++  RUN_LDPATH="$RUN_LDPATH:$1"
++])
++
+diff -urNad libsbml-2.3.4~/configure.ac libsbml-2.3.4/configure.ac
+--- libsbml-2.3.4~/configure.ac	2007-01-22 14:30:24.000000000 +0900
++++ libsbml-2.3.4/configure.ac	2007-01-22 14:31:42.000000000 +0900
+@@ -61,7 +61,6 @@
+ fi
+ 
+ AC_INIT([libSBML], LIBSBML_VERSION, [sbml-team@caltech.edu], [libsbml])
+-AC_CONFIG_AUX_DIR(config)
+ 
+ AC_REVISION($Revision: 1.56 $)
+ 
+@@ -72,7 +71,6 @@
+ AC_CONFIG_HEADERS(src/common/libsbml-config-unix.h)
+ AC_CONFIG_HEADERS(src/common/libsbml-package.h)
+ 
+-
+ dnl ---------------------------------------------------------------------------
+ dnl Command-line options
+ dnl ---------------------------------------------------------------------------
+@@ -154,13 +152,15 @@
+ AC_PROG_CXX
+ AC_PROG_CC
+ AC_PROG_CPP
+-AC_PROG_RANLIB
++AC_LIBTOOL_WIN32_DLL
++AC_PROG_LIBTOOL
+ AC_PROG_INSTALL
+ AC_PROG_MAKE_SET
+ 
++AC_SUBST(LIBTOOL)
++
+ AC_PATH_PROG([AUTOCONF],[autoconf],[autoconf])
+ AC_PATH_PROG([ACLOCAL],[aclocal],[aclocal])
+-AC_PATH_PROG([AR],[ar],[ar])
+ 
+ CONFIG_PROG_SWIG(1.3.24)
+ CONFIG_PROG_PYTHON
+@@ -169,9 +169,6 @@
+ CONFIG_PROG_MATLAB
+ CONFIG_PROG_LISP
+ 
+-dnl AC_LIBTOOL_WIN32_DLL
+-dnl AC_PROG_LIBTOOL
+-
+ 
+ dnl ---------------------------------------------------------------------------
+ dnl Checks for libraries.
+diff -urNad libsbml-2.3.4~/install-sh libsbml-2.3.4/install-sh
+--- libsbml-2.3.4~/install-sh	1970-01-01 09:00:00.000000000 +0900
++++ libsbml-2.3.4/install-sh	2007-01-22 14:31:42.000000000 +0900
+@@ -0,0 +1,276 @@
++#!/bin/sh
++#
++# install - install a program, script, or datafile
++# This comes from X11R5 (mit/util/scripts/install.sh).
++#
++# Copyright 1991 by the Massachusetts Institute of Technology
++#
++# Permission to use, copy, modify, distribute, and sell this software and its
++# documentation for any purpose is hereby granted without fee, provided that
++# the above copyright notice appear in all copies and that both that
++# copyright notice and this permission notice appear in supporting
++# documentation, and that the name of M.I.T. not be used in advertising or
++# publicity pertaining to distribution of the software without specific,
++# written prior permission.  M.I.T. makes no representations about the
++# suitability of this software for any purpose.  It is provided "as is"
++# without express or implied warranty.
++#
++# Calling this script install-sh is preferred over install.sh, to prevent
++# `make' implicit rules from creating a file called install from it
++# when there is no Makefile.
++#
++# This script is compatible with the BSD install script, but was written
++# from scratch.  It can only install one file at a time, a restriction
++# shared with many OS's install programs.
++
++
++# set DOITPROG to echo to test this script
++
++# Don't use :- since 4.3BSD and earlier shells don't like it.
++doit="${DOITPROG-}"
++
++
++# put in absolute paths if you don't have them in your path; or use env. vars.
++
++mvprog="${MVPROG-mv}"
++cpprog="${CPPROG-cp}"
++chmodprog="${CHMODPROG-chmod}"
++chownprog="${CHOWNPROG-chown}"
++chgrpprog="${CHGRPPROG-chgrp}"
++stripprog="${STRIPPROG-strip}"
++rmprog="${RMPROG-rm}"
++mkdirprog="${MKDIRPROG-mkdir}"
++
++transformbasename=""
++transform_arg=""
++instcmd="$mvprog"
++chmodcmd="$chmodprog 0755"
++chowncmd=""
++chgrpcmd=""
++stripcmd=""
++rmcmd="$rmprog -f"
++mvcmd="$mvprog"
++src=""
++dst=""
++dir_arg=""
++
++while [ x"$1" != x ]; do
++    case $1 in
++	-c) instcmd=$cpprog
++	    shift
++	    continue;;
++
++	-d) dir_arg=true
++	    shift
++	    continue;;
++
++	-m) chmodcmd="$chmodprog $2"
++	    shift
++	    shift
++	    continue;;
++
++	-o) chowncmd="$chownprog $2"
++	    shift
++	    shift
++	    continue;;
++
++	-g) chgrpcmd="$chgrpprog $2"
++	    shift
++	    shift
++	    continue;;
++
++	-s) stripcmd=$stripprog
++	    shift
++	    continue;;
++
++	-t=*) transformarg=`echo $1 | sed 's/-t=//'`
++	    shift
++	    continue;;
++
++	-b=*) transformbasename=`echo $1 | sed 's/-b=//'`
++	    shift
++	    continue;;
++
++	*)  if [ x"$src" = x ]
++	    then
++		src=$1
++	    else
++		# this colon is to work around a 386BSD /bin/sh bug
++		:
++		dst=$1
++	    fi
++	    shift
++	    continue;;
++    esac
++done
++
++if [ x"$src" = x ]
++then
++	echo "$0: no input file specified" >&2
++	exit 1
++else
++	:
++fi
++
++if [ x"$dir_arg" != x ]; then
++	dst=$src
++	src=""
++
++	if [ -d "$dst" ]; then
++		instcmd=:
++		chmodcmd=""
++	else
++		instcmd=$mkdirprog
++	fi
++else
++
++# Waiting for this to be detected by the "$instcmd $src $dsttmp" command
++# might cause directories to be created, which would be especially bad
++# if $src (and thus $dsttmp) contains '*'.
++
++	if [ -f "$src" ] || [ -d "$src" ]
++	then
++		:
++	else
++		echo "$0: $src does not exist" >&2
++		exit 1
++	fi
++
++	if [ x"$dst" = x ]
++	then
++		echo "$0: no destination specified" >&2
++		exit 1
++	else
++		:
++	fi
++
++# If destination is a directory, append the input filename; if your system
++# does not like double slashes in filenames, you may need to add some logic
++
++	if [ -d "$dst" ]
++	then
++		dst=$dst/`basename "$src"`
++	else
++		:
++	fi
++fi
++
++## this sed command emulates the dirname command
++dstdir=`echo "$dst" | sed -e 's,[^/]*$,,;s,/$,,;s,^$,.,'`
++
++# Make sure that the destination directory exists.
++#  this part is taken from Noah Friedman's mkinstalldirs script
++
++# Skip lots of stat calls in the usual case.
++if [ ! -d "$dstdir" ]; then
++defaultIFS='
++	'
++IFS="${IFS-$defaultIFS}"
++
++oIFS=$IFS
++# Some sh's can't handle IFS=/ for some reason.
++IFS='%'
++set - `echo "$dstdir" | sed -e 's@/@%@g' -e 's@^%@/@'`
++IFS=$oIFS
++
++pathcomp=''
++
++while [ $# -ne 0 ] ; do
++	pathcomp=$pathcomp$1
++	shift
++
++	if [ ! -d "$pathcomp" ] ;
++        then
++		$mkdirprog "$pathcomp"
++	else
++		:
++	fi
++
++	pathcomp=$pathcomp/
++done
++fi
++
++if [ x"$dir_arg" != x ]
++then
++	$doit $instcmd "$dst" &&
++
++	if [ x"$chowncmd" != x ]; then $doit $chowncmd "$dst"; else : ; fi &&
++	if [ x"$chgrpcmd" != x ]; then $doit $chgrpcmd "$dst"; else : ; fi &&
++	if [ x"$stripcmd" != x ]; then $doit $stripcmd "$dst"; else : ; fi &&
++	if [ x"$chmodcmd" != x ]; then $doit $chmodcmd "$dst"; else : ; fi
++else
++
++# If we're going to rename the final executable, determine the name now.
++
++	if [ x"$transformarg" = x ]
++	then
++		dstfile=`basename "$dst"`
++	else
++		dstfile=`basename "$dst" $transformbasename |
++			sed $transformarg`$transformbasename
++	fi
++
++# don't allow the sed command to completely eliminate the filename
++
++	if [ x"$dstfile" = x ]
++	then
++		dstfile=`basename "$dst"`
++	else
++		:
++	fi
++
++# Make a couple of temp file names in the proper directory.
++
++	dsttmp=$dstdir/#inst.$$#
++	rmtmp=$dstdir/#rm.$$#
++
++# Trap to clean up temp files at exit.
++
++	trap 'status=$?; rm -f "$dsttmp" "$rmtmp" && exit $status' 0
++	trap '(exit $?); exit' 1 2 13 15
++
++# Move or copy the file name to the temp name
++
++	$doit $instcmd "$src" "$dsttmp" &&
++
++# and set any options; do chmod last to preserve setuid bits
++
++# If any of these fail, we abort the whole thing.  If we want to
++# ignore errors from any of these, just make sure not to ignore
++# errors from the above "$doit $instcmd $src $dsttmp" command.
++
++	if [ x"$chowncmd" != x ]; then $doit $chowncmd "$dsttmp"; else :;fi &&
++	if [ x"$chgrpcmd" != x ]; then $doit $chgrpcmd "$dsttmp"; else :;fi &&
++	if [ x"$stripcmd" != x ]; then $doit $stripcmd "$dsttmp"; else :;fi &&
++	if [ x"$chmodcmd" != x ]; then $doit $chmodcmd "$dsttmp"; else :;fi &&
++
++# Now remove or move aside any old file at destination location.  We try this
++# two ways since rm can't unlink itself on some systems and the destination
++# file might be busy for other reasons.  In this case, the final cleanup
++# might fail but the new file should still install successfully.
++
++{
++	if [ -f "$dstdir/$dstfile" ]
++	then
++		$doit $rmcmd -f "$dstdir/$dstfile" 2>/dev/null ||
++		$doit $mvcmd -f "$dstdir/$dstfile" "$rmtmp" 2>/dev/null ||
++		{
++		  echo "$0: cannot unlink or rename $dstdir/$dstfile" >&2
++		  (exit 1); exit
++		}
++	else
++		:
++	fi
++} &&
++
++# Now rename the file to the real destination.
++
++	$doit $mvcmd "$dsttmp" "$dstdir/$dstfile"
++
++fi &&
++
++# The final little trick to "correctly" pass the exit status to the exit trap.
++
++{
++	(exit 0); exit
++}
+diff -urNad libsbml-2.3.4~/mkinstalldirs libsbml-2.3.4/mkinstalldirs
+--- libsbml-2.3.4~/mkinstalldirs	1970-01-01 09:00:00.000000000 +0900
++++ libsbml-2.3.4/mkinstalldirs	2007-01-22 14:31:42.000000000 +0900
+@@ -0,0 +1,111 @@
++#! /bin/sh
++# mkinstalldirs --- make directory hierarchy
++# Author: Noah Friedman <friedman@prep.ai.mit.edu>
++# Created: 1993-05-16
++# Public domain
++
++errstatus=0
++dirmode=""
++
++usage="\
++Usage: mkinstalldirs [-h] [--help] [-m mode] dir ..."
++
++# process command line arguments
++while test $# -gt 0 ; do
++  case $1 in
++    -h | --help | --h*)         # -h for help
++      echo "$usage" 1>&2
++      exit 0
++      ;;
++    -m)                         # -m PERM arg
++      shift
++      test $# -eq 0 && { echo "$usage" 1>&2; exit 1; }
++      dirmode=$1
++      shift
++      ;;
++    --)                         # stop option processing
++      shift
++      break
++      ;;
++    -*)                         # unknown option
++      echo "$usage" 1>&2
++      exit 1
++      ;;
++    *)                          # first non-opt arg
++      break
++      ;;
++  esac
++done
++
++for file
++do
++  if test -d "$file"; then
++    shift
++  else
++    break
++  fi
++done
++
++case $# in
++  0) exit 0 ;;
++esac
++
++case $dirmode in
++  '')
++    if mkdir -p -- . 2>/dev/null; then
++      echo "mkdir -p -- $*"
++      exec mkdir -p -- "$@"
++    fi
++    ;;
++  *)
++    if mkdir -m "$dirmode" -p -- . 2>/dev/null; then
++      echo "mkdir -m $dirmode -p -- $*"
++      exec mkdir -m "$dirmode" -p -- "$@"
++    fi
++    ;;
++esac
++
++for file
++do
++  set fnord `echo ":$file" | sed -ne 's/^:\//#/;s/^://;s/\// /g;s/^#/\//;p'`
++  shift
++
++  pathcomp=
++  for d
++  do
++    pathcomp="$pathcomp$d"
++    case $pathcomp in
++      -*) pathcomp=./$pathcomp ;;
++    esac
++
++    if test ! -d "$pathcomp"; then
++      echo "mkdir $pathcomp"
++
++      mkdir "$pathcomp" || lasterr=$?
++
++      if test ! -d "$pathcomp"; then
++  	errstatus=$lasterr
++      else
++  	if test ! -z "$dirmode"; then
++	  echo "chmod $dirmode $pathcomp"
++    	  lasterr=""
++  	  chmod "$dirmode" "$pathcomp" || lasterr=$?
++
++  	  if test ! -z "$lasterr"; then
++  	    errstatus=$lasterr
++  	  fi
++  	fi
++      fi
++    fi
++
++    pathcomp="$pathcomp/"
++  done
++done
++
++exit $errstatus
++
++# Local Variables:
++# mode: shell-script
++# sh-indentation: 2
++# End:
++# mkinstalldirs ends here
+diff -urNad libsbml-2.3.4~/src/bindings/java/Makefile.in libsbml-2.3.4/src/bindings/java/Makefile.in
+--- libsbml-2.3.4~/src/bindings/java/Makefile.in	1970-01-01 09:00:00.000000000 +0900
++++ libsbml-2.3.4/src/bindings/java/Makefile.in 1970-01-01 09:00:00.000000000 +0900
+@@ -98,7 +98,7 @@
+ 
+ extra_LDFLAGS  = $(JAVA_LDFLAGS)
+ 
+-extra_LIBS     = -L../.. -lsbml $(JAVA_LIBS)
++extra_LIBS     = ../../libsbml.la $(JAVA_LIBS)
+ 
+ ifdef USE_EXPAT
+   extra_CPPFLAGS += $(EXPAT_CPPFLAGS)
+@@ -153,9 +153,9 @@
+ # build directives of `makefile-common-actions.mk'.
+ 
+ .SUFFIXES:
+-.SUFFIXES: .i .cpp .h .java .class .jar .o .obj .so .dylib
++.SUFFIXES: .i .cpp .h .java .class .jar .lo .o .obj .so .dylib
+ 
+-objfiles = libsbml_wrap.$(OBJEXT)
++objfiles = libsbml_wrap.lo
+ 
+ # The default action is to remake everything.
+ 
+@@ -313,9 +313,19 @@
+ # -----------------------------------------------------------------------------
+ 
+ install: $(libraries)
+-	@list='$(libraries)'; for lib in $$list; do \
+-	  echo "$(INSTALL) $$lib $(DESTDIR)$(LIBDIR)"; \
+-	  $(INSTALL) $$lib $(DESTDIR)$(LIBDIR); \
++	list='$(libraries)'; for lib in $$list; do \
++	  if echo $$lib | grep '\.$(JNIEXT)$$' >/dev/null; then \
++	    $(LIBTOOL) --mode=install $(INSTALL_SH) \
++	    `echo $$lib | sed -e 's/\.$(JNIEXT)$$/\.la/'` $(abspath @top_srcdir@/$(thisdir))/$$lib && \
++		$(MKINSTALLDIRS) $(DESTDIR)$(LIBDIR)/jni; \
++	    $(INSTALL_SH) $$lib $(DESTDIR)$(LIBDIR)/jni; \
++	  elif echo $$lib | grep '\.jar$$' >/dev/null; then \
++		$(MKINSTALLDIRS) $(DESTDIR)$(DATADIR)/java; \
++	    $(INSTALL_SH) $$lib $(DESTDIR)$(DATADIR)/java; \
++	  else \
++		$(MKINSTALLDIRS) $(DESTDIR)$(LIBDIR); \
++	    $(INSTALL_SH) $$lib $(DESTDIR)$(LIBDIR); \
++	  fi; \
+ 	done;
+ 
+ uninstall:
+diff -urNad libsbml-2.3.4~/src/bindings/python/Makefile.in libsbml-2.3.4/src/bindings/python/Makefile.in
+--- libsbml-2.3.4~/src/bindings/python/Makefile.in	2007-01-22 14:30:24.000000000 +0900
++++ libsbml-2.3.4/src/bindings/python/Makefile.in	2007-01-22 14:31:42.000000000 +0900
+@@ -102,7 +102,7 @@
+ endif
+ 
+ extra_LDFLAGS  = $(PYTHON_LDFLAGS)
+-extra_LIBS     = -L../.. -lsbml $(PYTHON_LIBS)
++extra_LIBS     = ../../libsbml.la $(PYTHON_LIBS)
+ 
+ ifeq "$(USE_EXPAT)" "1"
+   extra_CPPFLAGS += $(EXPAT_CPPFLAGS)
+@@ -146,9 +146,9 @@
+ # -----------------------------------------------------------------------------
+ 
+ .SUFFIXES:
+-.SUFFIXES: .i .cpp .py .pyc .pyo .o .obj
++.SUFFIXES: .i .cpp .py .pyc .pyo .lo .o .obj
+ 
+-objfiles = libsbml_wrap.$(OBJEXT)
++objfiles = libsbml_wrap.lo
+ test_objfiles = $(objfiles)
+ 
+ # The default action is to remake everything.
+@@ -275,14 +275,15 @@
+ # -----------------------------------------------------------------------------
+ 
+ install: setup.py create-build-dir
+-	$(PYTHON) setup.py install --skip-build --prefix=$(prefix)
++	$(PYTHON) setup.py install --skip-build --prefix=$(DESTDIR)$(prefix)
+ 
+ installcheck:
+ 
+ create-build-dir: $(libraries)
+ 	mkdir -p build build/libsbml
+ 	echo "libsbml" > build/libsbml.pth
+-	cp $(libraries)  build
++	$(LIBTOOL) --mode=install cp $(libraries:.$(SHAREDLIBEXT)=.la) $(abspath .)
++	cp $(libraries) build
+ 	cp libsbml.py    build/libsbml
+ 
+ uninstall: setup.py
+diff -urNad libsbml-2.3.4~/src/sbml/Makefile.in libsbml-2.3.4/src/sbml/Makefile.in
+--- libsbml-2.3.4~/src/sbml/Makefile.in	2007-01-22 14:30:24.000000000 +0900
++++ libsbml-2.3.4/src/sbml/Makefile.in	2007-01-22 14:31:42.000000000 +0900
+@@ -196,7 +196,7 @@
+ 
+ # The libraries are actually placed in the parent directory.
+ 
+-libraries = ../$(PACKAGE).a ../$(PACKAGE).$(SHAREDLIBEXT)
++libraries = ../$(PACKAGE).a ../$(PACKAGE).la
+ 
+ # `distfiles' determines the files and directories included in a distribution.
+ # `distfiles_exclude' is used to filter out specific items, so that even if
