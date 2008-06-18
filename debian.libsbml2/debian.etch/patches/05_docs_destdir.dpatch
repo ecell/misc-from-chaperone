@@ -1,0 +1,37 @@
+#! /bin/sh /usr/share/dpatch/dpatch-run
+## 05_docs_destdir.dpatch by Moriyoshi Koizumi <mozo@sfc.keio.ac.jp>
+##
+## All lines beginning with `## DP:' are a description of the patch.
+## DP: No description.
+
+@DPATCH@
+
+--- libsbml-2.3.4~/docs/src/Makefile.in	2007-02-05 13:25:56.000000000 +0900
++++ libsbml-2.3.4/docs/src/Makefile.in	2007-02-05 13:31:19.000000000 +0900
+@@ -367,20 +367,20 @@
+ 	    dir=`echo "$$dir" | sed -e 's,/[^/]*$$,,'`; \
+ 	    if test "$$dir" != "$$file" && test "$$dir" != "."; then \
+ 	      dir="$$dir"; \
+-	      $(MKINSTALLDIRS) "$(DOCDIR)/$$dir"; \
++	      $(MKINSTALLDIRS) $(DESTDIR)"$(DOCDIR)/$$dir"; \
+ 	    else \
+ 	      dir=''; \
+ 	    fi; \
+ 	    if test -d $$d/$$file; then \
+ 	      if test -d $(srcdir)/$$file && test $$d != $(srcdir); then \
+ 	        echo Copying $(srcdir)/$$file; \
+-	        cp -pR $(srcdir)/$$file $(DOCDIR)$$dir || exit 1; \
++	        cp -pR $(srcdir)/$$file $(DESTDIR)$(DOCDIR)$$dir || exit 1; \
+ 	      fi; \
+-	      cp -pR $$d/$$file $(DOCDIR)$$dir || exit 1; \
++	      cp -pR $$d/$$file $(DESTDIR)$(DOCDIR)$$dir || exit 1; \
+ 	    else \
+-	      echo Copying $(DOCDIR)/$$file; \
+-	      test -f $(DOCDIR)/$$file \
+-	      || cp -p $$d/$$file $(DOCDIR)/$$dir \
++	      echo Copying $(DESTDIR)$(DOCDIR)/$$file; \
++	      test -f $(DESTDIR)$(DOCDIR)/$$file \
++	      || cp -p $$d/$$file $(DESTDIR)$(DOCDIR)/$$dir \
+ 	      || exit 1; \
+ 	    fi; \
+ 	  done; \
