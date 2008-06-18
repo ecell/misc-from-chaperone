@@ -12,6 +12,7 @@ XS-Vcs-Svn: svn://svn.debian.org/svn/debian-med/trunk/packages/libsbml
 
 Package: libsbml1-dev
 Section: contrib/devel
+Provides: libsbml-dev
 Architecture: any
 Depends: libsbml1 (=${Source-Version})
 Description: Development files for System Biology Markup Language Library
