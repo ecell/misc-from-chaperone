@@ -1,24 +1,32 @@
 #! /bin/sh /usr/share/dpatch/dpatch-run
-## 02_perl_man_install_dir.dpatch by  <mozo@sfc.keio.ac.jp>
+## 02_perl_man_install_dir.dpatch by  <moriyoshi@dynein>
 ##
 ## All lines beginning with `## DP:' are a description of the patch.
-## DP: Fixes the installation directory of manpages generated from the pod
+## DP: No description.
 
 @DPATCH@
 
-diff -ur libsbml-2.3.4.orig/src/bindings/perl/Makefile.in libsbml-2.3.4/src/bindings/perl/Makefile.in
---- libsbml-2.3.4.orig/src/bindings/perl/Makefile.in	2007-01-19 19:05:12.000000000 +0900
-+++ libsbml-2.3.4/src/bindings/perl/Makefile.in	2007-01-19 19:06:09.000000000 +0900
-@@ -192,8 +192,10 @@
+diff -urN libsbml-3.1.1.orig/src/bindings/perl/Makefile.in libsbml-3.1.1/src/bindings/perl/Makefile.in
+--- libsbml-3.1.1.orig/src/bindings/perl/Makefile.in	2008-02-26 08:54:33.000000000 +0900
++++ libsbml-3.1.1/src/bindings/perl/Makefile.in	2008-06-19 01:09:48.662926174 +0900
+@@ -172,12 +172,18 @@
  # -----------------------------------------------------------------------------
  
  install: Makefile.PL Makefile-perl
--	$(MAKE) -f Makefile-perl install
--
-+	$(MAKE) -f Makefile-perl install \
+-	$(MAKE) -f Makefile-perl pure_install
++	$(MAKE) -f Makefile-perl pure_install \
 +	        PREFIX=$(prefix) \
 +	        INSTALLSITEMAN1DIR=$(prefix)/share/man/man1 \
 +	        INSTALLSITEMAN3DIR=$(prefix)/share/man/man3
+ 
  installcheck:
  
  uninstall:
+-	$(MAKE) -f Makefile-perl myuninstall
++	$(MAKE) -f Makefile-perl myuninstall \
++	        PREFIX=$(prefix) \
++	        INSTALLSITEMAN1DIR=$(prefix)/share/man/man1 \
++	        INSTALLSITEMAN3DIR=$(prefix)/share/man/man3
+ 
+ 
+ # -----------------------------------------------------------------------------

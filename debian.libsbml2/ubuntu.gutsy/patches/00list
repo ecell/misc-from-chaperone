@@ -1,8 +1,0 @@
-01_extra_qualification.dpatch
-02_perl_man_install_dir.dpatch
-03_libtool_support.dpatch
-04_gcj_support.dpatch
-05_docs_destdir.dpatch
-06_matlab_support.dpatch
-07_swig_enum_oddity.dpatch
-#08_swig_java_proto.dpatch
