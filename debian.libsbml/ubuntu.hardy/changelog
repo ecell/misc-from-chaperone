@@ -1,3 +1,9 @@
+libsbml (2.3.5-2) hardy; urgency=low
+
+  * Changed package versioning scheme
+
+ -- Moriyoshi Koizumi <mozo@sfc.keio.ac.jp>  Wed, 18 Jun 2008 18:20:25 +0900
+
 libsbml (2.3.5-1) hardy; urgency=low
 
   * Upstream release.
