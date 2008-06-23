@@ -59,7 +59,7 @@ Description: System Biology Markup Language Library
 
 Package: python-sbml1
 Section: contrib/python
-Provides: ${python:Provides}
+Provides: ${python:Provides} python-sbml
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}, ${python:Depends}
 Description: System Biology Markup Language Library -- Python Binding
@@ -85,6 +85,7 @@ Description: System Biology Markup Language Library -- Python Binding
 Package: libsbml1-java
 Section: contrib/libs
 Architecture: any
+Provides: libsbml-java
 Depends: ${shlibs:Depends}, ${misc:Depends}
 Description: System Biology Markup Language Library -- Java Binding
  LibSBML is a library designed to help you read, write, manipulate, 
@@ -108,8 +109,9 @@ Description: System Biology Markup Language Library -- Java Binding
 
 Package: libsbml1-perl
 Section: contrib/perl
-Depends: ${shlibs:Depends}, ${perl:Depends}, ${misc:Depends}, perl
 Architecture: any
+Provides: libsbml-perl
+Depends: ${shlibs:Depends}, ${perl:Depends}, ${misc:Depends}, perl
 Description: System Biology Markup Language Library --Perl binding
  LibSBML is a library designed to help you read, write, manipulate, 
  translate, and validate SBML files and data streams. It is not an 
