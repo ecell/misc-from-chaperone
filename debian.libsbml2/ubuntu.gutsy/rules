@@ -38,8 +38,9 @@ patch: patch-stamp
 patch-stamp:
 	dpatch apply-all
 	libtoolize -c -f
-	aclocal -I config
+	aclocal -Iconfig
 	autoconf
+	eval `/usr/share/java-common/jvm-find.sh` && javac -cp $$JAVA_HOME/lib/tools.jar -sourcepath docs/src -d docs/src docs/src/ExcludeDoclet.java
 	touch patch-stamp
 
 config.status: patch configure
@@ -51,10 +52,19 @@ config.status: patch configure
 	            --prefix=/usr \
 	            --mandir=\$${prefix}/share/man \
 	            --infodir=\$${prefix}/share/info \
-	            --with-swig=/usr \
 	            --with-perl=/usr \
 	            --with-python=/usr \
-	            --with-java=/usr
+	            --with-java=/usr \
+	            --with-ruby=/usr \
+	            --with-octave=/usr
+	touch \
+		src/bindings/java/java-files \
+		src/bindings/java/libsbml_wrap.cpp \
+		src/bindings/perl/LibSBML.pm \
+		src/bindings/perl/LibSBML_wrap.cxx \
+		src/bindings/python/libsbml.py \
+		src/bindings/python/libsbml_wrap.cpp \
+		src/bindings/ruby/libsbml_wrap.cpp
 
 build: build-stamp build-stamp-indep
 build-stamp: config.status
@@ -77,7 +87,6 @@ distclean:
 	dh_testdir
 	dh_testroot
 	-([ -r Makefile ] && $(MAKE) distclean)
-	-(cd examples && $(MAKE) clean)
 
 clean: distclean unpatch
 	dh_testdir
@@ -87,35 +96,20 @@ clean: distclean unpatch
 	rm -f config.status
 	rm -f config.log
 	# Clean not sufficient for dpkg-sources diff
-	rm -rf docs/src/libsbml-manual/ docs/src/libsbml-manual.pdf docs/formatted/libsbml-manual.pdf debian/libsbml-java
-	dh_clean `find . -name "*.a" -o -name "*.la" -o -name "*pdf" -o -name "*.aux" -o -name "*.dvi" `
-#	rm -f src/bindings/java/Makefile \
-#	      src/bindings/java/libsbml_wrap.cpp \
-#	      src/bindings/java/javadoc.i \
-#	      src/bindings/lisp/libsbml-config.lisp \
-#	      src/bindings/lisp/Makefile \
-#	      src/bindings/lisp/libsbml-config-run.lisp \
-#	      src/bindings/lisp/build.lisp
-#	rm -f src/bindings/perl/Makefile.PL \
-#	      src/bindings/matlab/test/Makefile \
-#	      src/bindings/matlab/Makefile \
-#	      src/bindings/python/pydoc.i \
-#	      src/bindings/python/libsbml_wrap.cpp
-#	rm -f src/bindings/python/libsbml.py \
-#	      src/sbml/layout/test/Makefile \
-#	      src/sbml/layout/Makefile \
-#	      docs/src/tex/libsbmlextras.sty \
-#	      src/common/libsbml-package.h \
-#	      aclocal.m4
-#	rm -f win32/*/Makefile \
-#	      libsbml-2.3.4/ltmain.sh \
-#	      config.guess \
-#	      config.sub \
-#	      config/makefile-common-vars.mk
-#	rm -f ltmain.sh \
-#	      src/common/libsbml-config-unix.h \
-#	      configure \
-#	      acinclude.m4 
+	rm -rf docs/formatted
+	dh_clean \
+	  `find . -name "*.a" -o -name "*.la" -o -iname "*.Po" -o -iname "*.loT" -o -name "*pdf" -o -name "*.aux" -o -name "*.dvi" ` \
+	  docs/src/ExcludeDoclet\\$$1.class \
+	  src/bindings/octave/BuildTranslate_Win32.m \
+	  src/bindings/octave/CheckAndConvert.m \
+	  src/bindings/octave/Contents.m \
+	  src/bindings/octave/README.txt \
+	  src/bindings/octave/TranslateSBML.c \
+	  src/bindings/octave/TranslateSBML.m \
+	  src/bindings/octave/install_Win32.m \
+	  src/bindings/octave/make.bat \
+	  src/bindings/octave/matlab-tags-regexp.txt \
+	  src/bindings/octave/test.xml
 
 install: build
 	dh_testdir

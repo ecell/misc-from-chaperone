@@ -1,0 +1,7 @@
+01_java_cleanup_prevention        
+02_libtool_support
+03_gcj_support
+04_docs_destdir
+05_lower_doxygen_ver_req
+06_javadoc_discovery
+07_perldoc_mod_name_fix
