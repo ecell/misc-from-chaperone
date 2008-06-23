@@ -1,0 +1,19 @@
+#! /bin/sh /usr/share/dpatch/dpatch-run
+## 05_lower_doxyen_ver_req.dpatch by  <moriyoshi@dynein>
+##
+## All lines beginning with `## DP:' are a description of the patch.
+## DP: No description.
+
+@DPATCH@
+
+--- libsbml-3.1.1.orig/configure.ac	2008-01-23 07:32:22.000000000 +0900
++++ libsbml-3.1.1/configure.ac	2008-06-19 02:36:35.459644431 +0900
+@@ -150,7 +150,7 @@
+ CONFIG_PROG_LISP
+ CONFIG_PROG_RUBY
+ 
+-CONFIG_PROG_DOXYGEN(1.5.4)
++CONFIG_PROG_DOXYGEN(1.5.3)
+ 
+ dnl AC_LIBTOOL_WIN32_DLL
+ dnl AC_PROG_LIBTOOL

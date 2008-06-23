@@ -3,18 +3,20 @@ Priority: optional
 Maintainer: Steffen Moeller <moeller@pzr.uni-rostock.de>, Changyan Xie <panchoat@gmail.com>, Moriyoshi Koizumi <mozo@sfc.keio.ac.jp>
 Build-Depends: debhelper (>= 4.0.0), dpatch,
  autoconf, automake, libtool (>= 1.5.0), build-essential,
- libxerces27-dev, swig, python-dev, libperl-dev, java-gcj-compat-dev | java-sdk,
- fastjar, python-support (>= 0.3), tetex-bin, tetex-extra, latex2html, doxygen
+ libxml2-dev, python-dev, ruby1.8-dev, libperl-dev,
+ java-gcj-compat-dev | java-sdk, octave2.9-headers, fastjar,
+ python-support (>= 0.3), tetex-bin, tetex-extra, latex2html, doxygen, graphviz
 Standards-Version: 3.7.2
 Section: contrib/science
 XS-Vcs-Browser: http://svn.debian.org/wsvn/debian-med/trunk/packages/libsbml/trunk/
 XS-Vcs-Svn: svn://svn.debian.org/svn/debian-med/trunk/packages/libsbml
 
-Package: libsbml1-dev
+Package: libsbml3-dev
 Section: contrib/devel
 Provides: libsbml-dev
+Conflicts: libsbml2-dev
 Architecture: any
-Depends: libsbml1 (=${Source-Version})
+Depends: libsbml3 (=${Source-Version})
 Description: Development files for System Biology Markup Language Library
  LibSBML is a library designed to help you read, write, manipulate, 
  translate, and validate SBML files and data streams. It is not an 
@@ -33,11 +35,12 @@ Description: Development files for System Biology Markup Language Library
  The LibSBML code is very portable and is supported on Linux, Windows 
  (native), and Mac OS X.
  .
- This package contain the development files.
+ This package contains files necessary for development with libsbml.
 
-Package: libsbml1
+Package: libsbml3
 Section: contrib/libs
 Architecture: any
+Conflicts: libsbml1 libsbml2
 Depends: ${shlibs:Depends}, ${misc:Depends}
 Description: System Biology Markup Language Library
  LibSBML is a library designed to help you read, write, manipulate, 
@@ -57,9 +60,10 @@ Description: System Biology Markup Language Library
  The LibSBML code is very portable and is supported on Linux, Windows 
  (native), and Mac OS X.
 
-Package: python-sbml1
+Package: python-sbml3
 Section: contrib/python
-Provides: ${python:Provides}
+Provides: ${python:Provides} python-sbml
+Conflicts: python-sbml2
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}, ${python:Depends}
 Description: System Biology Markup Language Library -- Python Binding
@@ -80,10 +84,37 @@ Description: System Biology Markup Language Library -- Python Binding
  The LibSBML code is very portable and is supported on Linux, Windows 
  (native), and Mac OS X.
  .
- This package contain the python binding of libsbml.
+ This package contain the Python binding of LibSBML.
 
-Package: libsbml1-java
+Package: libsbml3-ruby1.8
 Section: contrib/libs
+Provides: libsbml3-ruby
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: System Biology Markup Language Library -- Ruby Binding
+ LibSBML is a library designed to help you read, write, manipulate, 
+ translate, and validate SBML files and data streams. It is not an 
+ application itself (though it does come with many example programs), 
+ but rather a library you can embed in your own applications.
+ .
+ LibSBML is written in ISO C and C++ but as a library it may be 
+ used from all the programming languages listed to the left. In fact, 
+ we strive to adhere to the natural idioms of each particular language
+ to make the libSBML programming experience seamless. For example, SBML
+ <listOf> elements behave like lists and sequences in Python, but 
+ vectors in Matlab. Also, the C and C++ interfaces are completely 
+ distinct (it's possible to program in pure C), but in C++ the C APIs 
+ may be called without sacrifcing type safety.
+ .
+ The LibSBML code is very portable and is supported on Linux, Windows 
+ (native), and Mac OS X.
+ .
+ This package contain the Ruby binding of LibSBML.
+
+Package: libsbml3-java
+Section: contrib/libs
+Provides: libsbml-java
+Conflicts: libsbml2-java
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}
 Description: System Biology Markup Language Library -- Java Binding
@@ -104,13 +135,15 @@ Description: System Biology Markup Language Library -- Java Binding
  The LibSBML code is very portable and is supported on Linux, Windows 
  (native), and Mac OS X.
  .
- This Package contain the Java binding library.
+ This Package contains the Java binding of LibSBML.
 
-Package: libsbml1-perl
+Package: libsbml3-perl
 Section: contrib/perl
+Provides: libsbml-perl
+Conflicts: libsbml2-perl
 Depends: ${shlibs:Depends}, ${perl:Depends}, ${misc:Depends}, perl
 Architecture: any
-Description: System Biology Markup Language Library --Perl binding
+Description: System Biology Markup Language Library -- Perl binding
  LibSBML is a library designed to help you read, write, manipulate, 
  translate, and validate SBML files and data streams. It is not an 
  application itself (though it does come with many example programs), 
@@ -128,19 +161,64 @@ Description: System Biology Markup Language Library --Perl binding
  The LibSBML code is very portable and is supported on Linux, Windows 
  (native), and Mac OS X.
  .
- This package contain Perl binding.
+ This package contains the Perl binding of LibSBML.
 
-Package: libsbml1-doc
+Package: libsbml3-octave
+Section: contrib/math
+Depends: ${shlibs:Depends}, ${misc:Depends}, octave
+Architecture: any
+Description: System Biology Markup Language Library -- Octave binding
+ LibSBML is a library designed to help you read, write, manipulate, 
+ translate, and validate SBML files and data streams. It is not an 
+ application itself (though it does come with many example programs), 
+ but rather a library you can embed in your own applications.
+ .
+ LibSBML is written in ISO C and C++ but as a library it may be 
+ used from all the programming languages listed to the left. In fact, 
+ we strive to adhere to the natural idioms of each particular language
+ to make the libSBML programming experience seamless. For example, SBML
+ <listOf> elements behave like lists and sequences in Python, but 
+ vectors in Matlab. Also, the C and C++ interfaces are completely 
+ distinct (it's possible to program in pure C), but in C++ the C APIs 
+ may be called without sacrifcing type safety.
+ .
+ The LibSBML code is very portable and is supported on Linux, Windows 
+ (native), and Mac OS X.
+ .
+ This package contains the Octave binding of LibSBML.
+
+Package: libsbml3-doc
 Section: devel
 Architecture: all
 Depends: 
-Description: HTML and PDF files for programming with libSBML
- Documentation for the development with libsbml.
+Description: C / C++ API documentation of LibSBML
+ This package contains C / C++ API documentation of LibSBML.
 
-Package: libsbml1-examples
+Package: libsbml3-java-doc
+Section: devel
+Architecture: all
+Depends: 
+Description: Java API documentation of LibSBML
+ This package contains Java API documentation of LibSBML.
+
+Package: libsbml3-perl-doc
+Section: devel
+Architecture: all
+Depends: 
+Description: Perl API documentation of LibSBML
+ This package contains Perl API documentation of LibSBML.
+
+Package: python-sbml3-doc
+Section: devel
+Architecture: all
+Depends: 
+Description: python API documentation of LibSBML
+ This package contains Python API documentation of LibSBML.
+
+Package: libsbml3-examples
 Section: contrib/doc
 Architecture: all
-Depends: libsbml1-dev (= ${Source-Version})
+Depends: libsbml3-dev (= ${Source-Version})
 Description: System Biology Markup Language Library -- example files
  LibSBML is a library designed to help you read, write, manipulate, 
  translate, and validate SBML files and data streams. It is not an 
@@ -159,4 +237,4 @@ Description: System Biology Markup Language Library -- example files
  The LibSBML code is very portable and is supported on Linux, Windows 
  (native), and Mac OS X.
  .
- This package contain C/C++, Java, Perl and layout examples.
+ This package contains C/C++, Java, Perl and layout examples.
