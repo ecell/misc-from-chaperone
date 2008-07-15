@@ -1,11 +1,10 @@
 Source: libsbml
 Priority: optional
 Maintainer: Steffen Moeller <moeller@pzr.uni-rostock.de>, Changyan Xie <panchoat@gmail.com>, Moriyoshi Koizumi <mozo@sfc.keio.ac.jp>
-Build-Depends: debhelper (>= 4.0.0), dpatch,
- autoconf, automake, libtool (>= 1.5.0), build-essential,
- libxml2-dev, python-dev, ruby1.8-dev, libperl-dev,
- java-gcj-compat-dev | java-sdk, octave2.9-headers, fastjar,
- python-support (>= 0.3), tetex-bin, tetex-extra, latex2html, doxygen, graphviz
+Build-Depends: debhelper (>= 4.0.0), dpatch, bash, autoconf, automake, ruby,
+ libtool (>= 1.5.0), build-essential, libxml2-dev, python-dev, ruby1.8-dev,
+ libperl-dev, java-gcj-compat-dev | java-sdk, octave2.9-headers, fastjar,
+ python-support (>= 0.3), doxygen, graphviz
 Standards-Version: 3.7.2
 Section: contrib/science
 XS-Vcs-Browser: http://svn.debian.org/wsvn/debian-med/trunk/packages/libsbml/trunk/
@@ -40,7 +39,7 @@ Description: Development files for System Biology Markup Language Library
 Package: libsbml3
 Section: contrib/libs
 Architecture: any
-Conflicts: libsbml1 libsbml2
+Conflicts: libsbml1, libsbml2
 Depends: ${shlibs:Depends}, ${misc:Depends}
 Description: System Biology Markup Language Library
  LibSBML is a library designed to help you read, write, manipulate, 
@@ -62,7 +61,7 @@ Description: System Biology Markup Language Library
 
 Package: python-sbml3
 Section: contrib/python
-Provides: ${python:Provides} python-sbml
+Provides: ${python:Provides}, python-sbml
 Conflicts: python-sbml2
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}, ${python:Depends}
@@ -141,7 +140,7 @@ Package: libsbml3-perl
 Section: contrib/perl
 Provides: libsbml-perl
 Conflicts: libsbml2-perl
-Depends: ${shlibs:Depends}, ${perl:Depends}, ${misc:Depends}, perl
+Depends: ${shlibs:Depends}, ${perl:Depends}, ${misc:Depends}
 Architecture: any
 Description: System Biology Markup Language Library -- Perl binding
  LibSBML is a library designed to help you read, write, manipulate, 

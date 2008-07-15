@@ -5,9 +5,47 @@
 ## DP: No description.
 
 @DPATCH@
+diff -urNad libsbml-3.1.1~/Makefile.in libsbml-3.1.1/Makefile.in
+--- libsbml-3.1.1~/Makefile.in	2008-07-15 19:38:32.468942227 +0900
++++ libsbml-3.1.1/Makefile.in	2008-07-15 19:38:34.000000000 +0900
+@@ -180,11 +180,13 @@
+   config/libcheck.m4                \
+   config/libxml.m4                  \
+   config/lisp.m4                    \
++  config/lt_link_helper.sh.in       \
+   config/makefile-common-actions.mk \
+   config/makefile-common-vars.mk.in \
+   config/matlab.m4                  \
+   config/missing                    \
+   config/mkinstalldirs              \
++  config/mkoctfile_wrapper.sh.in    \
+   config/octave.m4                  \
+   config/perl.m4                    \
+   config/python.m4                  \
+@@ -201,18 +203,14 @@
+ # makefile-common-actions.mk.
+ 
+ extra_distclean = config.status config.cache config.log autom4te.cache \
+-	src/common/config.h src/common/stamp-h1
++	src/common/config.h src/common/stamp-h1 config/lt_link_helper.sh
+ 
+ # It's safer to remove and recreate the copy of the include files (in the
+ # 'include' directory) after a make clean.  Previously we did it in a make
+ # distclean only, but I've run into situations where the copy didn't get
+ # updated.  This is a bit of a sledgehammer, but it's not too bad.
+ 
+-extra_clean = include libsbml.pc
+-
+-ifeq "$(HOST_TYPE)" "cygwin"
+-  extra_clean += libsbml.la
+-endif
++extra_clean = include libsbml.pc libsbml.la
+ 
+ 
+ # -----------------------------------------------------------------------------
 diff -urNad libsbml-3.1.1~/acinclude.m4 libsbml-3.1.1/acinclude.m4
 --- libsbml-3.1.1~/acinclude.m4	1970-01-01 09:00:00.000000000 +0900
-+++ libsbml-3.1.1/acinclude.m4	2008-06-23 21:19:08.000000000 +0900
++++ libsbml-3.1.1/acinclude.m4	2008-07-15 19:38:34.000000000 +0900
 @@ -0,0 +1,27 @@
 +# generated automatically by aclocal 1.9.6 -*- Autoconf -*-
 +
@@ -36,9 +74,79 @@ diff -urNad libsbml-3.1.1~/acinclude.m4 libsbml-3.1.1/acinclude.m4
 +m4_include([config/runldpath.m4])
 +m4_include([config/swig.m4])
 +m4_include([config/xercesc.m4])
+diff -urNad libsbml-3.1.1~/config/lt_link_helper.sh.in libsbml-3.1.1/config/lt_link_helper.sh.in
+--- libsbml-3.1.1~/config/lt_link_helper.sh.in	1970-01-01 09:00:00.000000000 +0900
++++ libsbml-3.1.1/config/lt_link_helper.sh.in	2008-07-15 19:40:08.000000000 +0900
+@@ -0,0 +1,66 @@
++#!/bin/sh
++
++libdir=@libdir@
++
++progname=`basename "$0"`
++
++dllibext=
++out_dir=
++out_file=
++out_filename=
++args=
++
++TAG=CXX
++
++if test -z "$1"; then
++    echo "${progname}: linker executable must be specified." >&2
++    exit
++fi
++
++linker_tmpdir=`mktemp -d`
++stage_dir="${linker_tmpdir}/stage"
++mkdir -p "${stage_dir}"
++
++LD="$1"
++shift
++
++while test -n "$1"; do
++    case "$1" in
++        --tag=*)
++            TAG=`echo "$1" | sed -e 's/^--tag=//'`
++            ;;
++        -o)
++            shift
++            out_file="$1"
++            dllibext=`echo "${out_file}" | sed -e 's/.*\(\.[^.]*\)$/\1/'`
++            out_dir=`dirname "${out_file}"`
++            out_filename=`basename "${out_file}" "${dllibext}"`
++            ;;
++        *.o)
++            lt_obj=`echo "$1" | sed -e 's/\.o$/.lo/'`
++            args="${args} \"${lt_obj}\""
++            ;;
++        lib*.la | */lib*.la)
++            lib=`basename "$1"`
++            mkdir -p "${stage_dir}/${libdir}" && \
++                eval "@abs_top_srcdir@/libtool --mode=install cp \"$1\" \"${stage_dir}/${libdir}/${lib}\""
++            libname=`echo "$lib" | sed -e 's/lib\([^.]*\)\.la/\1/'`
++            args="${args} -L\"${stage_dir}/${libdir}\" -l\"${libname}\""
++            ;; 
++        *)
++            args="${args} \"$1\""
++            ;;
++    esac
++    shift
++done
++
++if test -z "$out_file"; then
++    echo "${progname}: -o option not specified." >&2
++    rm -rf "${linker_tmpdir}"
++    exit 1
++fi
++
++eval "@abs_top_srcdir@/libtool --tag=\"$TAG\" --mode=link \"$LD\" -rpath \"${stage_dir}\" -module -avoid-version -no-undefined -shrext "${dllibext}" -o \"${linker_tmpdir}/${out_filename}.la\" $args" && \
++    eval "@abs_top_srcdir@/libtool --mode=install cp \"${linker_tmpdir}/${out_filename}.la\" \"${stage_dir}\"" && \
++    cp "${stage_dir}/${out_filename}${dllibext}" "${out_dir}"
++rm -rf "${linker_tmpdir}"
 diff -urNad libsbml-3.1.1~/config/makefile-common-actions.mk libsbml-3.1.1/config/makefile-common-actions.mk
---- libsbml-3.1.1~/config/makefile-common-actions.mk	2008-06-23 21:19:02.992183362 +0900
-+++ libsbml-3.1.1/config/makefile-common-actions.mk	2008-06-23 21:19:08.000000000 +0900
+--- libsbml-3.1.1~/config/makefile-common-actions.mk	2008-07-15 19:38:32.468942227 +0900
++++ libsbml-3.1.1/config/makefile-common-actions.mk	2008-07-15 19:38:34.000000000 +0900
 @@ -40,7 +40,7 @@
  # -----------------------------------------------------------------------------
  
@@ -260,8 +368,8 @@ diff -urNad libsbml-3.1.1~/config/makefile-common-actions.mk libsbml-3.1.1/confi
  distclean: clean distclean-compile distclean-depend distclean-generic \
  	distclean-tags distclean-libtool
 diff -urNad libsbml-3.1.1~/config/makefile-common-vars.mk.in libsbml-3.1.1/config/makefile-common-vars.mk.in
---- libsbml-3.1.1~/config/makefile-common-vars.mk.in	2008-06-23 21:19:02.992183362 +0900
-+++ libsbml-3.1.1/config/makefile-common-vars.mk.in	2008-06-23 21:19:08.000000000 +0900
+--- libsbml-3.1.1~/config/makefile-common-vars.mk.in	2008-07-15 19:38:32.468942227 +0900
++++ libsbml-3.1.1/config/makefile-common-vars.mk.in	2008-07-15 19:38:34.000000000 +0900
 @@ -136,6 +136,9 @@
  OCTAVE            = @OCTAVE@
  MKOCTFILE         = @MKOCTFILE@
@@ -280,12 +388,12 @@ diff -urNad libsbml-3.1.1~/config/makefile-common-vars.mk.in libsbml-3.1.1/confi
  SHELL             = @SHELL@
  
  LIBSBML_VERSION   = @PACKAGE_VERSION@
-diff -urNad libsbml-3.1.1~/config/mkoctfile_wrapper.sh libsbml-3.1.1/config/mkoctfile_wrapper.sh
---- libsbml-3.1.1~/config/mkoctfile_wrapper.sh	1970-01-01 09:00:00.000000000 +0900
-+++ libsbml-3.1.1/config/mkoctfile_wrapper.sh	2008-06-23 21:19:08.000000000 +0900
+diff -urNad libsbml-3.1.1~/config/mkoctfile_wrapper.sh.in libsbml-3.1.1/config/mkoctfile_wrapper.sh.in
+--- libsbml-3.1.1~/config/mkoctfile_wrapper.sh.in	1970-01-01 09:00:00.000000000 +0900
++++ libsbml-3.1.1/config/mkoctfile_wrapper.sh.in	2008-07-15 19:38:34.000000000 +0900
 @@ -0,0 +1,14 @@
 +#!/bin/sh
-+SHAREDLIBEXT=so
++SHAREDLIBEXT=@SHAREDLIBEXT@
 +
 +args=
 +while test ! -z "$1"; do
@@ -299,8 +407,8 @@ diff -urNad libsbml-3.1.1~/config/mkoctfile_wrapper.sh libsbml-3.1.1/config/mkoc
 +
 +eval "exec $args"
 diff -urNad libsbml-3.1.1~/config/octave.m4 libsbml-3.1.1/config/octave.m4
---- libsbml-3.1.1~/config/octave.m4	2008-06-23 21:19:02.992183362 +0900
-+++ libsbml-3.1.1/config/octave.m4	2008-06-23 21:19:08.000000000 +0900
+--- libsbml-3.1.1~/config/octave.m4	2008-07-15 19:38:32.468942227 +0900
++++ libsbml-3.1.1/config/octave.m4	2008-07-15 19:38:34.000000000 +0900
 @@ -42,9 +42,13 @@
                       [no-octave-found], [$with_octave/bin])
        AC_PATH_PROG([MKOCTFILE], [mkoctfile], [$with_octave/bin/mkoctfile],
@@ -342,8 +450,8 @@ diff -urNad libsbml-3.1.1~/config/octave.m4 libsbml-3.1.1/config/octave.m4
    fi
  
 diff -urNad libsbml-3.1.1~/configure.ac libsbml-3.1.1/configure.ac
---- libsbml-3.1.1~/configure.ac	2008-06-23 21:19:02.992183362 +0900
-+++ libsbml-3.1.1/configure.ac	2008-06-23 21:19:08.000000000 +0900
+--- libsbml-3.1.1~/configure.ac	2008-07-15 19:38:32.468942227 +0900
++++ libsbml-3.1.1/configure.ac	2008-07-15 19:38:34.000000000 +0900
 @@ -133,13 +133,15 @@
  AC_PROG_CXX
  AC_PROG_CC
@@ -362,9 +470,19 @@ diff -urNad libsbml-3.1.1~/configure.ac libsbml-3.1.1/configure.ac
  
  CONFIG_PROG_SWIG(1.3.33)
  CONFIG_PROG_PYTHON
+@@ -225,7 +227,9 @@
+ dnl Output
+ dnl ---------------------------------------------------------------------------
+ 
++AC_CONFIG_FILES([config/lt_link_helper.sh], [chmod a+x config/lt_link_helper.sh])
+ AC_CONFIG_FILES([config/makefile-common-vars.mk])
++AC_CONFIG_FILES([config/mkoctfile_wrapper.sh], [chmod a+x config/mkoctfile_wrapper.sh])
+ AC_CONFIG_FILES([./Makefile])
+ 
+ AC_CONFIG_FILES([src/Makefile])
 diff -urNad libsbml-3.1.1~/src/bindings/java/Makefile.in libsbml-3.1.1/src/bindings/java/Makefile.in
---- libsbml-3.1.1~/src/bindings/java/Makefile.in	2008-06-23 21:19:03.992240301 +0900
-+++ libsbml-3.1.1/src/bindings/java/Makefile.in	2008-06-23 21:19:08.000000000 +0900
+--- libsbml-3.1.1~/src/bindings/java/Makefile.in	2008-07-15 19:38:33.468999165 +0900
++++ libsbml-3.1.1/src/bindings/java/Makefile.in	2008-07-15 19:38:34.000000000 +0900
 @@ -60,9 +60,9 @@
  extra_CPPFLAGS    = $(JAVA_CPPFLAGS) -I../swig
  SWIGFLAGS        += $(JAVA_CPPFLAGS) -I../swig
@@ -410,8 +528,8 @@ diff -urNad libsbml-3.1.1~/src/bindings/java/Makefile.in libsbml-3.1.1/src/bindi
  
  uninstall:
 diff -urNad libsbml-3.1.1~/src/bindings/octave/Makefile.in libsbml-3.1.1/src/bindings/octave/Makefile.in
---- libsbml-3.1.1~/src/bindings/octave/Makefile.in	2008-06-23 21:19:02.992183362 +0900
-+++ libsbml-3.1.1/src/bindings/octave/Makefile.in	2008-06-23 21:19:08.000000000 +0900
+--- libsbml-3.1.1~/src/bindings/octave/Makefile.in	2008-07-15 19:38:32.468942227 +0900
++++ libsbml-3.1.1/src/bindings/octave/Makefile.in	2008-07-15 19:38:34.000000000 +0900
 @@ -76,7 +76,7 @@
  # `extra_clean' and `extra_distclean' determine the files and directories
  # removed during "make clean" and "make distclean".
@@ -430,33 +548,42 @@ diff -urNad libsbml-3.1.1~/src/bindings/octave/Makefile.in libsbml-3.1.1/src/bin
  
  %.$(OCTAVEEXT): %.c
 -	$(MKOCTFILE) $(flags) $^ -lsbml $(MKOCTFILE_LIBS)
-+	$(LIBTOOL) --mode=link --tag=CXX $(MKOCTFILE_WRAPPER) $(MKOCTFILE) -o $@ $(flags) $^ ../../libsbml.la $(MKOCTFILE_LIBS)
++	$(TOP_SRCDIR)/config/lt_link_helper.sh $(MKOCTFILE_WRAPPER) $(MKOCTFILE) -o $@ $(flags) $^ ../../libsbml.la $(MKOCTFILE_LIBS)
  
  
  # -----------------------------------------------------------------------------
-@@ -124,11 +124,17 @@
- # Installation.
- # -----------------------------------------------------------------------------
- 
--install: all install-libraries
-+install: all
-+	for i in $(libraries); do \
-+	  $(LIBTOOL) --mode=install $(INSTALL_SH) $$i $(DESTDIR)$(prefix)$(LOCALOCTFILEDIR)/$$i; \
-+	done
- 
- installdirs: all
- 
--uninstall: uninstall-libraries
-+uninstall:
-+	for i in $(libraries); do \
-+	  $(LIBTOOL) --mode=uninstall rm $(DESTDIR)$(prefix)$(LOCALOCTFILEDIR)/$$i; \
-+	done
- 
- 
- # -----------------------------------------------------------------------------
+diff -urNad libsbml-3.1.1~/src/bindings/perl/Makefile.PL.in libsbml-3.1.1/src/bindings/perl/Makefile.PL.in
+--- libsbml-3.1.1~/src/bindings/perl/Makefile.PL.in	2008-07-15 19:38:32.468942227 +0900
++++ libsbml-3.1.1/src/bindings/perl/Makefile.PL.in	2008-07-15 19:38:34.000000000 +0900
+@@ -50,10 +50,9 @@
+               MAKEFILE    => 'Makefile-perl',
+               INSTALLDIRS => "site",
+               LIBS        => "@XERCES_LDFLAGS@ @EXPAT_LDFLAGS@ @LIBXML_LDFLAGS@ @XERCES_LIBS@ @EXPAT_LIBS@ @LIBXML_LIBS@ -lm -lstdc++",
+-	      CC          => "@CXX@",
+ 	      CCFLAGS     => "@PERL_CPPFLAGS@",
+               INC         => "-I../swig -I../.. -I../../../include",
+-              MYEXTLIB    => "../../libsbml.a",
++              MYEXTLIB    => "../../libsbml.la",
+               macro       => {USE_SWIG => q[@USE_SWIG@]},
+               OBJECT      => "LibSBML_wrap.o",
+ 	      MAN1PODS    => {},
+diff -urNad libsbml-3.1.1~/src/bindings/perl/Makefile.in libsbml-3.1.1/src/bindings/perl/Makefile.in
+--- libsbml-3.1.1~/src/bindings/perl/Makefile.in	2008-07-15 19:38:32.468942227 +0900
++++ libsbml-3.1.1/src/bindings/perl/Makefile.in	2008-07-15 19:38:34.000000000 +0900
+@@ -138,7 +138,9 @@
+ 	@ echo "Reconfigure --with-perl in order to build the perl-bindings"
+ 	exit 1
+ else
+-	$(PERL) Makefile.PL $(if $(LIB),LIB=$(LIB),)
++	$(PERL) Makefile.PL $(if $(LIB),LIB=$(LIB),) \
++	  CC="$(LIBTOOL) --mode=compile $(CXX)" \
++	  LD="$(TOP_SRCDIR)/config/lt_link_helper.sh $(CXX)"
+ # The following perl commands add missing -lstdc++ option to EXTRALIBS and
+ # LDLOADLIBS in Makefile-perl.
+ # ExtUtil::Makemaker may ignore -lstdc++ option in some environments (e.g. MacOSX, cygwin)
 diff -urNad libsbml-3.1.1~/src/bindings/python/Makefile.in libsbml-3.1.1/src/bindings/python/Makefile.in
---- libsbml-3.1.1~/src/bindings/python/Makefile.in	2008-06-23 21:19:02.992183362 +0900
-+++ libsbml-3.1.1/src/bindings/python/Makefile.in	2008-06-23 21:19:08.000000000 +0900
+--- libsbml-3.1.1~/src/bindings/python/Makefile.in	2008-07-15 19:38:32.468942227 +0900
++++ libsbml-3.1.1/src/bindings/python/Makefile.in	2008-07-15 19:38:34.000000000 +0900
 @@ -78,8 +78,8 @@
    extra_CPPFLAGS += -Wno-long-double
  endif
@@ -489,8 +616,8 @@ diff -urNad libsbml-3.1.1~/src/bindings/python/Makefile.in libsbml-3.1.1/src/bin
  	cp libsbml.py    build/libsbml
  
 diff -urNad libsbml-3.1.1~/src/bindings/ruby/Makefile.in libsbml-3.1.1/src/bindings/ruby/Makefile.in
---- libsbml-3.1.1~/src/bindings/ruby/Makefile.in	2008-06-23 21:19:02.992183362 +0900
-+++ libsbml-3.1.1/src/bindings/ruby/Makefile.in	2008-06-23 21:19:08.000000000 +0900
+--- libsbml-3.1.1~/src/bindings/ruby/Makefile.in	2008-07-15 19:38:32.468942227 +0900
++++ libsbml-3.1.1/src/bindings/ruby/Makefile.in	2008-07-15 19:38:34.000000000 +0900
 @@ -79,7 +79,7 @@
  endif
  
@@ -532,8 +659,8 @@ diff -urNad libsbml-3.1.1~/src/bindings/ruby/Makefile.in libsbml-3.1.1/src/bindi
  # -----------------------------------------------------------------------------
  # Creating distribution (for libSBML maintainers only)
 diff -urNad libsbml-3.1.1~/src/sbml/Makefile.in libsbml-3.1.1/src/sbml/Makefile.in
---- libsbml-3.1.1~/src/sbml/Makefile.in	2008-06-23 21:19:02.992183362 +0900
-+++ libsbml-3.1.1/src/sbml/Makefile.in	2008-06-23 21:19:08.000000000 +0900
+--- libsbml-3.1.1~/src/sbml/Makefile.in	2008-07-15 19:38:32.468942227 +0900
++++ libsbml-3.1.1/src/sbml/Makefile.in	2008-07-15 19:38:34.000000000 +0900
 @@ -170,19 +170,7 @@
  
  # The libraries are actually placed in the parent directory.
