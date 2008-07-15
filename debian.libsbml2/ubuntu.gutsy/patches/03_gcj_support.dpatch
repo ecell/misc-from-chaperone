@@ -5,18 +5,18 @@
 ## DP: No description.
 
 @DPATCH@
-
---- libsbml-3.1.1.orig/config/java.m4	2007-12-18 10:26:11.000000000 +0900
-+++ libsbml-3.1.1/config/java.m4	2008-06-19 02:07:38.860681295 +0900
-@@ -158,116 +158,117 @@
+diff -urNad libsbml-3.1.1~/config/java.m4 libsbml-3.1.1/config/java.m4
+--- libsbml-3.1.1~/config/java.m4	2007-12-18 10:26:11.000000000 +0900
++++ libsbml-3.1.1/config/java.m4	2008-06-24 23:42:34.000000000 +0900
+@@ -158,116 +158,123 @@
  dnl http://www.gnu.org/software/ac-archive/htmldoc/ac_jni_include_dirs.html
  
  AC_DEFUN([AC_JAVA_INCLUDE_DIRS],[
 -  
    test "x$JAVAC" = x && AC_MSG_ERROR(['$JAVAC' undefined])
-   
-   _AC_JAVA_FOLLOW_SYMLINKS("$JAVAC")
-   _jtopdir=`echo "$JAVA_FOLLOWED" | sed -e 's://*:/:g' -e 's:/[[^/]]*$::'`
+-  
+-  _AC_JAVA_FOLLOW_SYMLINKS("$JAVAC")
+-  _jtopdir=`echo "$JAVA_FOLLOWED" | sed -e 's://*:/:g' -e 's:/[[^/]]*$::'`
 -  case "$host_os" in
 -    *darwin*)
 -	java_bail=no
@@ -63,8 +63,11 @@
 -	    elif test $JAVA_VER_SUBMINOR -eq 1; then
 -	      if test -e "$java_mac_prefix/Versions/1.4.1/Headers"; then
 -	        _jinc="$java_mac_prefix/Versions/1.4.1/Headers"
-+
-+  AC_CHECK_HEADER([jni.h],, [
++ 
++  JAVA_CPPFLAGS= 
++  AC_MSG_CHECKING([for JAVA_HOME])
++  _AC_JAVA_FOLLOW_SYMLINKS("$JAVAC", [
++    _jtopdir=`echo "$JAVA_FOLLOWED" | sed -e 's://*:/:g' -e 's:/[[^/]]*$::'`
 +    case "$host_os" in
 +      *darwin*)
 +        java_bail=no 
@@ -179,12 +182,10 @@
 +      _jtopdir=`echo "$_jtopdir" | sed -e 's:/[[^/]]*$::'`
 +      if test -e "$_jtopdir/include/jni.h"; then
 +        JAVA_CPPFLAGS="$JAVA_CPPFLAGS -I\"$_jtopdir/include\""
-+      else
-+        AC_MSG_ERROR([Cannot find Java include files.])
 +      fi
      fi
 -  fi
-   
+-  
 -  dnl Get the likely subdirectories for system specific Java includes.
 -  case "$host_os" in
 -    bsdi*)    _java_inc_subdirs="bsdos";;
@@ -194,6 +195,15 @@
 -    *cygwin*) _java_inc_subdirs="win32";;
 -    *)        _java_inc_subdirs="genunix";;
 -  esac
++    if test -n "$JAVA_CPPFLAGS"; then
++      AC_MSG_RESULT([$_jtopdir])
++      break
++    fi 
++  ])
++ 
++  if test -z "$JAVA_CPPFLAGS"; then
++    AC_MSG_ERROR([Cannot find Java include fiiles.] )
++  else
 +    dnl Get the likely subdirectories for system specific Java includes.
 +    case "$host_os" in
 +      bsdi*)    _java_inc_subdirs="bsdos";;
@@ -216,7 +226,16 @@
 +        JAVA_CPPFLAGS="$JAVA_CPPFLAGS -I\"$_jtopdir/include/$jsubdir\""
 +      fi
 +    done
-+  ])
++  fi
  ])
  
  dnl _AC_JAVA_FOLLOW_SYMLINKS <path>
+@@ -284,6 +291,7 @@
+           dnl 'X' avoids triggering unwanted echo options.
+           *) _cur=`echo "X$_cur" | sed -e 's/^X//' -e 's:[[^/]]*$::'`"$_slink";;
+         esac
++        JAVA_FOLLOWED="$_cur"
++        ifelse([$2],[],[:],[$2])
+   done
+-  JAVA_FOLLOWED="$_cur"
+ ])# _AC_JAVA
