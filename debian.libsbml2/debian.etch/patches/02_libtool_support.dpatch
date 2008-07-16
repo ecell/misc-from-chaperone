@@ -6,8 +6,8 @@
 
 @DPATCH@
 diff -urNad libsbml-3.1.1~/Makefile.in libsbml-3.1.1/Makefile.in
---- libsbml-3.1.1~/Makefile.in	2008-07-16 00:08:38.892493629 +0900
-+++ libsbml-3.1.1/Makefile.in	2008-07-16 00:08:46.000000000 +0900
+--- libsbml-3.1.1~/Makefile.in	2008-01-26 16:07:46.000000000 +0900
++++ libsbml-3.1.1/Makefile.in	2008-07-16 18:03:07.000000000 +0900
 @@ -180,11 +180,13 @@
    config/libcheck.m4                \
    config/libxml.m4                  \
@@ -45,7 +45,7 @@ diff -urNad libsbml-3.1.1~/Makefile.in libsbml-3.1.1/Makefile.in
  # -----------------------------------------------------------------------------
 diff -urNad libsbml-3.1.1~/acinclude.m4 libsbml-3.1.1/acinclude.m4
 --- libsbml-3.1.1~/acinclude.m4	1970-01-01 09:00:00.000000000 +0900
-+++ libsbml-3.1.1/acinclude.m4	2008-07-16 00:08:46.000000000 +0900
++++ libsbml-3.1.1/acinclude.m4	2008-07-16 18:03:07.000000000 +0900
 @@ -0,0 +1,27 @@
 +# generated automatically by aclocal 1.9.6 -*- Autoconf -*-
 +
@@ -76,7 +76,7 @@ diff -urNad libsbml-3.1.1~/acinclude.m4 libsbml-3.1.1/acinclude.m4
 +m4_include([config/xercesc.m4])
 diff -urNad libsbml-3.1.1~/config/lt_link_helper.sh.in libsbml-3.1.1/config/lt_link_helper.sh.in
 --- libsbml-3.1.1~/config/lt_link_helper.sh.in	1970-01-01 09:00:00.000000000 +0900
-+++ libsbml-3.1.1/config/lt_link_helper.sh.in	2008-07-16 00:08:46.000000000 +0900
++++ libsbml-3.1.1/config/lt_link_helper.sh.in	2008-07-16 18:03:07.000000000 +0900
 @@ -0,0 +1,66 @@
 +#!/bin/sh
 +
@@ -145,8 +145,8 @@ diff -urNad libsbml-3.1.1~/config/lt_link_helper.sh.in libsbml-3.1.1/config/lt_l
 +    cp "${stage_dir}/${out_filename}${dllibext}" "${out_dir}"
 +rm -rf "${linker_tmpdir}"
 diff -urNad libsbml-3.1.1~/config/makefile-common-actions.mk libsbml-3.1.1/config/makefile-common-actions.mk
---- libsbml-3.1.1~/config/makefile-common-actions.mk	2008-07-16 00:08:38.892493629 +0900
-+++ libsbml-3.1.1/config/makefile-common-actions.mk	2008-07-16 00:08:46.000000000 +0900
+--- libsbml-3.1.1~/config/makefile-common-actions.mk	2008-01-24 17:18:33.000000000 +0900
++++ libsbml-3.1.1/config/makefile-common-actions.mk	2008-07-16 18:04:48.000000000 +0900
 @@ -40,7 +40,7 @@
  # -----------------------------------------------------------------------------
  
@@ -207,7 +207,7 @@ diff -urNad libsbml-3.1.1~/config/makefile-common-actions.mk libsbml-3.1.1/confi
  endif
  
  # The following defines the default function for linking objects into a
-@@ -97,8 +86,21 @@
+@@ -97,8 +86,18 @@
  
  ifndef link_shared_lib
    define link_shared_lib 
@@ -223,15 +223,12 @@ diff -urNad libsbml-3.1.1~/config/makefile-common-actions.mk libsbml-3.1.1/confi
 +
 +ifndef link_dl_lib
 +  define link_dl_lib
-+    $(LIBTOOL) --mode=link $(CXX) $(LDFLAGS) $(extra_LDFLAGS) \
-+    -module -avoid-version -export-dynamic \
-+    -inst-prefix-dir "$(DESTDIR)" \
-+    $(platform_link_flags) -rpath $(abspath $(dir $(1))) \
-+    -o $(1:.$(SHAREDLIBEXT)=.la) $(objfiles:.o=.lo) $(extra_LIBS) $(LIBS)
++    $(TOP_SRCDIR)/config/lt_link_helper.sh $(CXX) $(LDFLAGS) $(extra_LDFLAGS) \
++    $(platform_link_flags) -o $(1) $(objfiles:.o=.lo) $(extra_LIBS) $(LIBS)
    endef
  endif
  
-@@ -121,16 +123,16 @@
+@@ -121,16 +120,16 @@
  # filter the results.  This abstracts out this common operation.
  
  make_objects_list = \
@@ -253,7 +250,7 @@ diff -urNad libsbml-3.1.1~/config/makefile-common-actions.mk libsbml-3.1.1/confi
  
  # This next line includes the dependency files.  This doesn't use
  # $depfiles, but rather a wildcard on the actual files, so that if they
-@@ -154,42 +156,18 @@
+@@ -154,42 +153,18 @@
  
  endif
  
@@ -302,7 +299,7 @@ diff -urNad libsbml-3.1.1~/config/makefile-common-actions.mk libsbml-3.1.1/confi
  	$(compile) -MT $@ -MD -MP -MF "$(DEPDIR)/$*.$(DEPEXT)" -c -o $@ $<
  
  .c.obj:
-@@ -199,7 +177,7 @@
+@@ -199,7 +174,7 @@
  	else rm -f "$(DEPDIR)/$*.Tpo"; exit 1; \
  	fi
  
@@ -311,7 +308,7 @@ diff -urNad libsbml-3.1.1~/config/makefile-common-actions.mk libsbml-3.1.1/confi
  	$(cxxcompile) -MT $@ -MD -MP -MF "$(DEPDIR)/$*.$(DEPEXT)" -c -o $@ $<
  
  .cpp.obj:
-@@ -209,8 +187,6 @@
+@@ -209,8 +184,6 @@
  	else rm -f "$(DEPDIR)/$*.Tpo"; exit 1; \
  	fi
  
@@ -320,7 +317,7 @@ diff -urNad libsbml-3.1.1~/config/makefile-common-actions.mk libsbml-3.1.1/confi
  ifeq "$(HOST_TYPE)" "darwin"
  
  %.bundle ../%.bundle: $(objfiles)
-@@ -324,18 +300,7 @@
+@@ -324,18 +297,7 @@
  
  define install_library
    $(MKINSTALLDIRS) $(DESTDIR)$(LIBDIR)
@@ -340,7 +337,7 @@ diff -urNad libsbml-3.1.1~/config/makefile-common-actions.mk libsbml-3.1.1/confi
  endef
  
  to_install_libraries = $(addprefix install-,$(libraries))
-@@ -408,7 +373,7 @@
+@@ -408,7 +370,7 @@
  
  define uninstall_library
    @if test -f $(1); then \
@@ -349,7 +346,7 @@ diff -urNad libsbml-3.1.1~/config/makefile-common-actions.mk libsbml-3.1.1/confi
      target="$(2)/$$finalname"; \
      if test -f $$target ; then \
        echo rm $$target; \
-@@ -555,7 +520,7 @@
+@@ -555,7 +517,7 @@
  clean-normal: mostlyclean clean-libraries clean-libtool clean-extras
  
  clean-generic:
@@ -358,7 +355,7 @@ diff -urNad libsbml-3.1.1~/config/makefile-common-actions.mk libsbml-3.1.1/confi
  
  clean-libtool:
  	-rm -rf .libs _libs
-@@ -575,7 +540,7 @@
+@@ -575,7 +537,7 @@
  endif
  
  mostlyclean-libtool:
@@ -368,8 +365,8 @@ diff -urNad libsbml-3.1.1~/config/makefile-common-actions.mk libsbml-3.1.1/confi
  distclean: clean distclean-compile distclean-depend distclean-generic \
  	distclean-tags distclean-libtool
 diff -urNad libsbml-3.1.1~/config/makefile-common-vars.mk.in libsbml-3.1.1/config/makefile-common-vars.mk.in
---- libsbml-3.1.1~/config/makefile-common-vars.mk.in	2008-07-16 00:08:38.892493629 +0900
-+++ libsbml-3.1.1/config/makefile-common-vars.mk.in	2008-07-16 00:08:46.000000000 +0900
+--- libsbml-3.1.1~/config/makefile-common-vars.mk.in	2008-01-26 09:17:31.000000000 +0900
++++ libsbml-3.1.1/config/makefile-common-vars.mk.in	2008-07-16 18:03:07.000000000 +0900
 @@ -136,6 +136,9 @@
  OCTAVE            = @OCTAVE@
  MKOCTFILE         = @MKOCTFILE@
@@ -390,7 +387,7 @@ diff -urNad libsbml-3.1.1~/config/makefile-common-vars.mk.in libsbml-3.1.1/confi
  LIBSBML_VERSION   = @PACKAGE_VERSION@
 diff -urNad libsbml-3.1.1~/config/mkoctfile_wrapper.sh.in libsbml-3.1.1/config/mkoctfile_wrapper.sh.in
 --- libsbml-3.1.1~/config/mkoctfile_wrapper.sh.in	1970-01-01 09:00:00.000000000 +0900
-+++ libsbml-3.1.1/config/mkoctfile_wrapper.sh.in	2008-07-16 00:08:46.000000000 +0900
++++ libsbml-3.1.1/config/mkoctfile_wrapper.sh.in	2008-07-16 18:03:07.000000000 +0900
 @@ -0,0 +1,14 @@
 +#!/bin/sh
 +SHAREDLIBEXT=@SHAREDLIBEXT@
@@ -407,8 +404,8 @@ diff -urNad libsbml-3.1.1~/config/mkoctfile_wrapper.sh.in libsbml-3.1.1/config/m
 +
 +eval "exec $args"
 diff -urNad libsbml-3.1.1~/config/octave.m4 libsbml-3.1.1/config/octave.m4
---- libsbml-3.1.1~/config/octave.m4	2008-07-16 00:08:38.892493629 +0900
-+++ libsbml-3.1.1/config/octave.m4	2008-07-16 00:08:46.000000000 +0900
+--- libsbml-3.1.1~/config/octave.m4	2007-11-16 08:45:05.000000000 +0900
++++ libsbml-3.1.1/config/octave.m4	2008-07-16 18:03:07.000000000 +0900
 @@ -42,9 +42,13 @@
                       [no-octave-found], [$with_octave/bin])
        AC_PATH_PROG([MKOCTFILE], [mkoctfile], [$with_octave/bin/mkoctfile],
@@ -450,8 +447,8 @@ diff -urNad libsbml-3.1.1~/config/octave.m4 libsbml-3.1.1/config/octave.m4
    fi
  
 diff -urNad libsbml-3.1.1~/configure.ac libsbml-3.1.1/configure.ac
---- libsbml-3.1.1~/configure.ac	2008-07-16 00:08:38.892493629 +0900
-+++ libsbml-3.1.1/configure.ac	2008-07-16 00:08:46.000000000 +0900
+--- libsbml-3.1.1~/configure.ac	2008-01-23 07:32:22.000000000 +0900
++++ libsbml-3.1.1/configure.ac	2008-07-16 18:03:07.000000000 +0900
 @@ -133,13 +133,15 @@
  AC_PROG_CXX
  AC_PROG_CC
@@ -481,8 +478,8 @@ diff -urNad libsbml-3.1.1~/configure.ac libsbml-3.1.1/configure.ac
  
  AC_CONFIG_FILES([src/Makefile])
 diff -urNad libsbml-3.1.1~/src/bindings/java/Makefile.in libsbml-3.1.1/src/bindings/java/Makefile.in
---- libsbml-3.1.1~/src/bindings/java/Makefile.in	2008-07-16 00:08:39.892550565 +0900
-+++ libsbml-3.1.1/src/bindings/java/Makefile.in	2008-07-16 00:08:46.000000000 +0900
+--- libsbml-3.1.1~/src/bindings/java/Makefile.in	2008-07-16 18:03:07.066325357 +0900
++++ libsbml-3.1.1/src/bindings/java/Makefile.in	2008-07-16 18:03:07.000000000 +0900
 @@ -60,9 +60,9 @@
  extra_CPPFLAGS    = $(JAVA_CPPFLAGS) -I../swig
  SWIGFLAGS        += $(JAVA_CPPFLAGS) -I../swig
@@ -528,8 +525,8 @@ diff -urNad libsbml-3.1.1~/src/bindings/java/Makefile.in libsbml-3.1.1/src/bindi
  
  uninstall:
 diff -urNad libsbml-3.1.1~/src/bindings/octave/Makefile.in libsbml-3.1.1/src/bindings/octave/Makefile.in
---- libsbml-3.1.1~/src/bindings/octave/Makefile.in	2008-07-16 00:08:38.892493629 +0900
-+++ libsbml-3.1.1/src/bindings/octave/Makefile.in	2008-07-16 00:16:05.000000000 +0900
+--- libsbml-3.1.1~/src/bindings/octave/Makefile.in	2008-02-26 08:54:31.000000000 +0900
++++ libsbml-3.1.1/src/bindings/octave/Makefile.in	2008-07-16 18:03:07.000000000 +0900
 @@ -76,7 +76,7 @@
  # `extra_clean' and `extra_distclean' determine the files and directories
  # removed during "make clean" and "make distclean".
@@ -573,8 +570,8 @@ diff -urNad libsbml-3.1.1~/src/bindings/octave/Makefile.in libsbml-3.1.1/src/bin
  
  # -----------------------------------------------------------------------------
 diff -urNad libsbml-3.1.1~/src/bindings/perl/Makefile.PL.in libsbml-3.1.1/src/bindings/perl/Makefile.PL.in
---- libsbml-3.1.1~/src/bindings/perl/Makefile.PL.in	2008-07-16 00:08:38.892493629 +0900
-+++ libsbml-3.1.1/src/bindings/perl/Makefile.PL.in	2008-07-16 00:08:46.000000000 +0900
+--- libsbml-3.1.1~/src/bindings/perl/Makefile.PL.in	2008-02-26 08:54:33.000000000 +0900
++++ libsbml-3.1.1/src/bindings/perl/Makefile.PL.in	2008-07-16 18:03:07.000000000 +0900
 @@ -50,10 +50,9 @@
                MAKEFILE    => 'Makefile-perl',
                INSTALLDIRS => "site",
@@ -588,8 +585,8 @@ diff -urNad libsbml-3.1.1~/src/bindings/perl/Makefile.PL.in libsbml-3.1.1/src/bi
                OBJECT      => "LibSBML_wrap.o",
  	      MAN1PODS    => {},
 diff -urNad libsbml-3.1.1~/src/bindings/perl/Makefile.in libsbml-3.1.1/src/bindings/perl/Makefile.in
---- libsbml-3.1.1~/src/bindings/perl/Makefile.in	2008-07-16 00:08:38.892493629 +0900
-+++ libsbml-3.1.1/src/bindings/perl/Makefile.in	2008-07-16 00:08:46.000000000 +0900
+--- libsbml-3.1.1~/src/bindings/perl/Makefile.in	2008-02-26 08:54:33.000000000 +0900
++++ libsbml-3.1.1/src/bindings/perl/Makefile.in	2008-07-16 18:03:07.000000000 +0900
 @@ -138,7 +138,9 @@
  	@ echo "Reconfigure --with-perl in order to build the perl-bindings"
  	exit 1
@@ -602,8 +599,8 @@ diff -urNad libsbml-3.1.1~/src/bindings/perl/Makefile.in libsbml-3.1.1/src/bindi
  # LDLOADLIBS in Makefile-perl.
  # ExtUtil::Makemaker may ignore -lstdc++ option in some environments (e.g. MacOSX, cygwin)
 diff -urNad libsbml-3.1.1~/src/bindings/python/Makefile.in libsbml-3.1.1/src/bindings/python/Makefile.in
---- libsbml-3.1.1~/src/bindings/python/Makefile.in	2008-07-16 00:08:38.892493629 +0900
-+++ libsbml-3.1.1/src/bindings/python/Makefile.in	2008-07-16 00:08:46.000000000 +0900
+--- libsbml-3.1.1~/src/bindings/python/Makefile.in	2008-02-26 08:54:31.000000000 +0900
++++ libsbml-3.1.1/src/bindings/python/Makefile.in	2008-07-16 18:03:16.000000000 +0900
 @@ -78,8 +78,8 @@
    extra_CPPFLAGS += -Wno-long-double
  endif
@@ -627,23 +624,15 @@ diff -urNad libsbml-3.1.1~/src/bindings/python/Makefile.in libsbml-3.1.1/src/bin
  test_objfiles = $(objfiles)
  
  # The default action is to remake everything.
-@@ -285,6 +285,7 @@
- create-build-dir: $(libraries)
- 	mkdir -p build build/libsbml
- 	echo "libsbml" > build/libsbml.pth
-+	$(LIBTOOL) --mode=install cp $(libraries:.$(SHAREDLIBEXT)=.la) $(abspath .)
- 	cp $(libraries)  build
- 	cp libsbml.py    build/libsbml
- 
 diff -urNad libsbml-3.1.1~/src/bindings/ruby/Makefile.in libsbml-3.1.1/src/bindings/ruby/Makefile.in
---- libsbml-3.1.1~/src/bindings/ruby/Makefile.in	2008-07-16 00:08:39.392521882 +0900
-+++ libsbml-3.1.1/src/bindings/ruby/Makefile.in	2008-07-16 00:08:46.000000000 +0900
+--- libsbml-3.1.1~/src/bindings/ruby/Makefile.in	2008-02-26 08:54:34.000000000 +0900
++++ libsbml-3.1.1/src/bindings/ruby/Makefile.in	2008-07-16 18:03:07.000000000 +0900
 @@ -79,7 +79,7 @@
  endif
  
  extra_LDFLAGS  = $(RUBY_LDFLAGS)
 -extra_LIBS     = -L../.. -lsbml $(RUBY_LIBS)
-+extra_LIBS     = -../../libsbml.la $(RUBY_LIBS)
++extra_LIBS     = ../../libsbml.la $(RUBY_LIBS)
  
  ifdef USE_EXPAT
    extra_CPPFLAGS += @EXPAT_CPPFLAGS@ 
@@ -663,8 +652,8 @@ diff -urNad libsbml-3.1.1~/src/bindings/ruby/Makefile.in libsbml-3.1.1/src/bindi
 -	$(RUBY) -rfileutils -rrbconfig -e "include FileUtils::Verbose; mkpath(\"$(DESTDIR)$(LIBDIR)\")"
 -	$(RUBY) -rfileutils -rrbconfig -e "include FileUtils::Verbose; install(\"$(libraries)\", \"$(DESTDIR)$(LIBDIR)\")"
 +	archdir=`$(RUBY) -rrbconfig -e 'print Config::CONFIG["archdir"]'`; \
-+	for i in $(libraries:.$(SHAREDLIBEXT)=); do \
-+	  $(LIBTOOL) --mode=install $(INSTALL_SH) $$i.la $(DESTDIR)$$archdir/$$i.$(SHAREDLIBEXT); \
++	for i in $(libraries); do \
++	  $(INSTALL_SH) $$i $(DESTDIR)$$archdir/$$i; \
 +	done
  
  installcheck:
@@ -672,15 +661,15 @@ diff -urNad libsbml-3.1.1~/src/bindings/ruby/Makefile.in libsbml-3.1.1/src/bindi
  uninstall:
 -	$(RUBY) -rfileutils -rrbconfig -e "include FileUtils::Verbose; rm(\"$(DESTDIR)$(LIBDIR)\" + \"/\" + \"$(libraries)\")"
 +	archdir=`$(RUBY) -rrbconfig -e 'print Config::CONFIG["archdir"]'`; \
-+	for i in $(libraries:.$(SHAREDLIBEXT)=); do \
-+	  $(LIBTOOL) --mode=uninstall rm $(DESTDIR)$$archdir/$$i.$(SHAREDLIBEXT); \
++	for i in $(libraries); do \
++	  rm $(DESTDIR)$$archdir/$$i; \
 +	done
  
  # -----------------------------------------------------------------------------
  # Creating distribution (for libSBML maintainers only)
 diff -urNad libsbml-3.1.1~/src/sbml/Makefile.in libsbml-3.1.1/src/sbml/Makefile.in
---- libsbml-3.1.1~/src/sbml/Makefile.in	2008-07-16 00:08:39.392521882 +0900
-+++ libsbml-3.1.1/src/sbml/Makefile.in	2008-07-16 00:08:46.000000000 +0900
+--- libsbml-3.1.1~/src/sbml/Makefile.in	2008-02-26 08:54:22.000000000 +0900
++++ libsbml-3.1.1/src/sbml/Makefile.in	2008-07-16 18:03:07.000000000 +0900
 @@ -170,19 +170,7 @@
  
  # The libraries are actually placed in the parent directory.
