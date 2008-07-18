@@ -10,11 +10,11 @@ Section: contrib/science
 XS-Vcs-Browser: http://svn.debian.org/wsvn/debian-med/trunk/packages/libsbml/trunk/
 XS-Vcs-Svn: svn://svn.debian.org/svn/debian-med/trunk/packages/libsbml
 
-Package: libsbml1-dev
+Package: libsbml2-dev
 Section: contrib/devel
 Provides: libsbml-dev
 Architecture: any
-Depends: libsbml1 (=${Source-Version})
+Depends: libsbml2 (=${Source-Version})
 Description: Development files for System Biology Markup Language Library
  LibSBML is a library designed to help you read, write, manipulate, 
  translate, and validate SBML files and data streams. It is not an 
@@ -35,7 +35,7 @@ Description: Development files for System Biology Markup Language Library
  .
  This package contain the development files.
 
-Package: libsbml1
+Package: libsbml2
 Section: contrib/libs
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}
@@ -57,9 +57,9 @@ Description: System Biology Markup Language Library
  The LibSBML code is very portable and is supported on Linux, Windows 
  (native), and Mac OS X.
 
-Package: python-sbml1
+Package: python-sbml2
 Section: contrib/python
-Provides: ${python:Provides} python-sbml
+Provides: ${python:Provides}
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}, ${python:Depends}
 Description: System Biology Markup Language Library -- Python Binding
@@ -82,7 +82,7 @@ Description: System Biology Markup Language Library -- Python Binding
  .
  This package contain the python binding of libsbml.
 
-Package: libsbml1-java
+Package: libsbml2-java
 Section: contrib/libs
 Architecture: any
 Provides: libsbml-java
@@ -107,7 +107,7 @@ Description: System Biology Markup Language Library -- Java Binding
  .
  This Package contain the Java binding library.
 
-Package: libsbml1-perl
+Package: libsbml2-perl
 Section: contrib/perl
 Provides:  libsbml-perl
 Architecture: any
@@ -132,17 +132,16 @@ Description: System Biology Markup Language Library --Perl binding
  .
  This package contain Perl binding.
 
-Package: libsbml1-doc
+Package: libsbml2-doc
 Section: devel
 Architecture: all
 Depends: 
 Description: HTML and PDF files for programming with libSBML
  Documentation for the development with libsbml.
 
-Package: libsbml1-examples
+Package: libsbml2-examples
 Section: contrib/doc
 Architecture: all
-Depends: libsbml1-dev (= ${Source-Version})
 Description: System Biology Markup Language Library -- example files
  LibSBML is a library designed to help you read, write, manipulate, 
  translate, and validate SBML files and data streams. It is not an 
