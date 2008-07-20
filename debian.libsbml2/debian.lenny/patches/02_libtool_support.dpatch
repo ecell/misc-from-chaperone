@@ -1,0 +1,699 @@
+#! /bin/sh /usr/share/dpatch/dpatch-run
+## 02_libtool_support.dpatch by  <mozo@sfc.keio.ac.jp>
+##
+## All lines beginning with `## DP:' are a description of the patch.
+## DP: No description.
+
+@DPATCH@
+diff -urNad libsbml-3.1.1~/Makefile.in libsbml-3.1.1/Makefile.in
+--- libsbml-3.1.1~/Makefile.in	2008-07-18 05:50:16.907919523 +0900
++++ libsbml-3.1.1/Makefile.in	2008-07-18 05:50:18.000000000 +0900
+@@ -180,11 +180,13 @@
+   config/libcheck.m4                \
+   config/libxml.m4                  \
+   config/lisp.m4                    \
++  config/lt_link_helper.sh.in       \
+   config/makefile-common-actions.mk \
+   config/makefile-common-vars.mk.in \
+   config/matlab.m4                  \
+   config/missing                    \
+   config/mkinstalldirs              \
++  config/mkoctfile_wrapper.sh.in    \
+   config/octave.m4                  \
+   config/perl.m4                    \
+   config/python.m4                  \
+@@ -201,18 +203,14 @@
+ # makefile-common-actions.mk.
+ 
+ extra_distclean = config.status config.cache config.log autom4te.cache \
+-	src/common/config.h src/common/stamp-h1
++	src/common/config.h src/common/stamp-h1 config/lt_link_helper.sh
+ 
+ # It's safer to remove and recreate the copy of the include files (in the
+ # 'include' directory) after a make clean.  Previously we did it in a make
+ # distclean only, but I've run into situations where the copy didn't get
+ # updated.  This is a bit of a sledgehammer, but it's not too bad.
+ 
+-extra_clean = include libsbml.pc
+-
+-ifeq "$(HOST_TYPE)" "cygwin"
+-  extra_clean += libsbml.la
+-endif
++extra_clean = include libsbml.pc libsbml.la
+ 
+ 
+ # -----------------------------------------------------------------------------
+diff -urNad libsbml-3.1.1~/acinclude.m4 libsbml-3.1.1/acinclude.m4
+--- libsbml-3.1.1~/acinclude.m4	1970-01-01 09:00:00.000000000 +0900
++++ libsbml-3.1.1/acinclude.m4	2008-07-18 05:50:18.000000000 +0900
+@@ -0,0 +1,27 @@
++# generated automatically by aclocal 1.9.6 -*- Autoconf -*-
++
++# Copyright (C) 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004,
++# 2005  Free Software Foundation, Inc.
++# This file is free software; the Free Software Foundation
++# gives unlimited permission to copy and/or distribute it,
++# with or without modifications, as long as this notice is preserved.
++
++# This program is distributed in the hope that it will be useful,
++# but WITHOUT ANY WARRANTY, to the extent permitted by law; without
++# even the implied warranty of MERCHANTABILITY or FITNESS FOR A
++# PARTICULAR PURPOSE.
++
++m4_include([config/doxygen.m4])
++m4_include([config/expat.m4])
++m4_include([config/java.m4])
++m4_include([config/libcheck.m4])
++m4_include([config/libxml.m4])
++m4_include([config/lisp.m4])
++m4_include([config/matlab.m4])
++m4_include([config/octave.m4])
++m4_include([config/perl.m4])
++m4_include([config/python.m4])
++m4_include([config/ruby.m4])
++m4_include([config/runldpath.m4])
++m4_include([config/swig.m4])
++m4_include([config/xercesc.m4])
+diff -urNad libsbml-3.1.1~/config/lt_link_helper.sh.in libsbml-3.1.1/config/lt_link_helper.sh.in
+--- libsbml-3.1.1~/config/lt_link_helper.sh.in	1970-01-01 09:00:00.000000000 +0900
++++ libsbml-3.1.1/config/lt_link_helper.sh.in	2008-07-18 05:50:18.000000000 +0900
+@@ -0,0 +1,69 @@
++#!/bin/sh
++
++libdir=@prefix@/lib
++
++progname=`basename "$0"`
++
++dllibext=
++out_dir=
++out_file=
++out_filename=
++args=
++
++TAG=CXX
++
++if test -z "$1"; then
++    echo "${progname}: linker executable must be specified." >&2
++    exit
++fi
++
++linker_tmpdir=`mktemp -d`
++stage_dir="${linker_tmpdir}/stage"
++mkdir -p "${stage_dir}"
++
++LD="$1"
++shift
++
++while test -n "$1"; do
++    case "$1" in
++        --tag=*)
++            TAG=`echo "$1" | sed -e 's/^--tag=//'`
++            ;;
++        -o)
++            shift
++            out_file="$1"
++            dllibext=`echo "${out_file}" | sed -e 's/.*\(\.[^.]*\)$/\1/'`
++            out_dir=`dirname "${out_file}"`
++            out_filename=`basename "${out_file}" "${dllibext}"`
++            ;;
++        *.o)
++            lt_obj=`echo "$1" | sed -e 's/\.o$/.lo/'`
++            args="${args} \"${lt_obj}\""
++            ;;
++        --libdir)
++            shift
++            libdir="$1" 
++            ;;
++        lib*.la | */lib*.la)
++            mkdir -p "${stage_dir}/${libdir}" && \
++                eval "@abs_top_srcdir@/libtool --mode=install cp \"$1\" \"${stage_dir}/${libdir}\""
++            libname=`basename "$1" | sed -e 's/lib\([^.]*\)\.la/\1/'`
++            args="${args} \"$1\""
++            ;; 
++        *)
++            args="${args} \"$1\""
++            ;;
++    esac
++    shift
++done
++
++if test -z "$out_file"; then
++    echo "${progname}: -o option not specified." >&2
++    rm -rf "${linker_tmpdir}"
++    exit 1
++fi
++
++eval "@abs_top_srcdir@/libtool --tag=\"$TAG\" --mode=link \"$LD\" -rpath \"${libdir}\" -inst-prefix-dir \"${stage_dir}\" -module -avoid-version -export-dynamic -no-undefined -shrext "${dllibext}" -o \"${out_dir}/${out_filename}.la\" $args" && \
++    eval "@abs_top_srcdir@/libtool --mode=install cp \"${out_dir}/${out_filename}.la\" \"${stage_dir}/${libdir}\"" && \
++    cp "${stage_dir}/${libdir}/${out_filename}${dllibext}" "${out_dir}"
++rm -rf "${linker_tmpdir}"
+diff -urNad libsbml-3.1.1~/config/makefile-common-actions.mk libsbml-3.1.1/config/makefile-common-actions.mk
+--- libsbml-3.1.1~/config/makefile-common-actions.mk	2008-07-18 05:50:16.907919523 +0900
++++ libsbml-3.1.1/config/makefile-common-actions.mk	2008-07-18 05:50:18.000000000 +0900
+@@ -40,7 +40,7 @@
+ # -----------------------------------------------------------------------------
+ 
+ .SUFFIXES:
+-.SUFFIXES: .a .so .dylib .jnilib .c .h .cpp .hpp .o .obj .Po .py .pyc .pyo .i .bundle
++.SUFFIXES: .a .so .dylib .jnilib .c .h .cpp .hpp .o .lo .la .obj .Po .py .pyc .pyo .i .bundle
+ 
+ # The following define default values of variables like `cxxcompile'.  An
+ # enclosing makefile can define other values, in which case those
+@@ -50,28 +50,22 @@
+ 
+ default_includes ?= -I. -I$(top_include)
+ 
+-# Compiling under cygwin doesn't need -fPIC.
+-
+-ifneq "$(HOST_TYPE)" "cygwin"
+-  FPIC = -fPIC
+-endif
+-
+ # Here follow the generic compilation commands.  (Note: the use of 'sort'
+ # here is only to remove duplicates, which the 'sort' function does as a
+ # documented side-effect.)
+ 
+-compile ?= $(CC) $(FPIC) $(CPPFLAGS) $(extra_CPPFLAGS) \
+-	$(CFLAGS) $(extra_CFLAGS) $(sort $(default_includes) $(INCLUDES))
++compile ?= $(LIBTOOL) --mode=compile $(CC) $(extra_CPPFLAGS) $(extra_CFLAGS) \
++    $(default_includes) $(CPPFLAGS) $(CFLAGS) $(INCLUDES)
+ 
+-cxxcompile ?= $(CXX) $(FPIC) $(CPPFLAGS) $(extra_CPPFLAGS) \
+-	$(CXXFLAGS) $(extra_CXXFLAGS) $(sort $(default_includes) $(INCLUDES))
++cxxcompile ?= $(LIBTOOL) --mode=compile $(CXX) $(extra_CPPFLAGS) \
++    $(extra_CXXFLAGS) $(default_includes) $(CPPFLAGS) $(CXXFLAGS) $(INCLUDES)
+ 
+ # For linking libraries, we try to follow the result of the libtool
+ # numbering scheme, but at the final end, not in the input format.  (The
+ # libtool input format is peculiar to us.)  Curious, this makes the
+ # numbering very easy: it's a direct mapping of the libsbml version number.
+ 
+-library_version = $(PACKAGE_VERSION)
++library_version = $(subst $(empty) $(empty),.,$(wordlist 1, 2, $(subst ., ,$(PACKAGE_VERSION)))).0
+ 
+ # `platform_link_flags' is used below in the definition of link_shared_lib.
+ # Generally, gcc and ld need -shared, but some systems think different.
+@@ -79,14 +73,9 @@
+ ifeq "$(HOST_TYPE)" "darwin"
+   # MacOS X's normal libraries have the extension .dylib, and "bundles"
+   # have .so.  The default shared library definition here builds .dylib.
+-  platform_link_flags ?= -dynamiclib -flat_namespace \
+-	-current_version $(library_version)
+-else
+-ifeq "$(HOST_TYPE)" "aix5.3.0.0" 
+-  platform_link_flags ?= -G
++  platform_link_flags ?= -dynamiclib -flat_namespace
+ else
+-  platform_link_flags ?= -shared
+-endif
++  platform_link_flags ?= 
+ endif
+ 
+ # The following defines the default function for linking objects into a
+@@ -97,8 +86,19 @@
+ 
+ ifndef link_shared_lib
+   define link_shared_lib 
+-    $(CXX) $(LDFLAGS) $(extra_LDFLAGS) $(platform_link_flags) \
+-	-o $(1) $(objfiles) $(extra_LIBS) $(LIBS)
++    $(LIBTOOL) --mode=link $(CXX) $(LDFLAGS) $(extra_LDFLAGS) \
++    -version-info $(subst .,:,$(library_version)) \
++    -inst-prefix-dir "$(DESTDIR)" \
++    $(platform_link_flags) -rpath $(LIBDIR) -o $(1) $(objfiles:.o=.lo) \
++    $(extra_LIBS) $(LIBS)
++  endef
++endif
++
++ifndef link_dl_lib
++  define link_dl_lib
++    $(TOP_SRCDIR)/config/lt_link_helper.sh $(CXX) --libdir $(LIBDIR) \
++    $(LDFLAGS) $(extra_LDFLAGS) $(platform_link_flags) \
++    -o $(1) $(objfiles:.o=.lo) $(extra_LIBS) $(LIBS)
+   endef
+ endif
+ 
+@@ -121,16 +121,16 @@
+ # filter the results.  This abstracts out this common operation.
+ 
+ make_objects_list = \
+-  $(filter %.$(OBJEXT),\
+-    $(patsubst %.cpp,%.$(OBJEXT),$(1)) $(patsubst %.c,%.$(OBJEXT),$(1)))
++  $(filter %.lo,\
++    $(patsubst %.cpp,%.lo,$(1)) $(patsubst %.c,%.lo,$(1)))
+ 
+ # The following generate the list of object file names and dependency file
+ # names from the list of source files.  They're used for the generic
+ # compilation rules further below.
+ 
+-tmplist  ?= $(sources:.cpp=.$(OBJEXT)) $(sources:.c=.$(OBJEXT))
+-objfiles ?= $(filter %.$(OBJEXT),$(tmplist))
+-depfiles ?= $(addprefix $(DEPDIR)/,$(objfiles:.$(OBJEXT)=.$(DEPEXT)))
++tmplist  ?= $(sources:.cpp=.lo) $(sources:.c=.lo)
++objfiles ?= $(filter %.lo,$(tmplist))
++depfiles ?= $(addprefix $(DEPDIR)/,$(objfiles:.lo=.$(DEPEXT)))
+ 
+ # This next line includes the dependency files.  This doesn't use
+ # $depfiles, but rather a wildcard on the actual files, so that if they
+@@ -154,42 +154,18 @@
+ 
+ endif
+ 
+-%.so ../%.so: $(objfiles)
+-	$(call link_shared_lib,$@)
+-
+-%.$(JNIEXT) ../%.$(JNIEXT): $(objfiles)
++%.la ../%.la: $(objfiles)
+ 	$(call link_shared_lib,$@)
+ 
+ %.$(SHAREDLIBEXT) ../%.$(SHAREDLIBEXT): $(objfiles)
+-	$(call link_shared_lib,$@)
+-
+-# The following define generic rules for creating object files.
+-
+-ifeq "$(HOST_TYPE)" "aix"
+-
+-.c.$(OBJEXT):
+-	$(compile) -c -o $@ $<
+-
+-.c.obj:
+-	if $(compile) -c -o $@ \
+-	  `if test -f '$<'; then $(CYGPATH_W) '$<'; else $(CYGPATH_W) '$(srcdir)/$<'; fi`; \
+-	then mv "$(DEPDIR)/$*.Tpo" "$(DEPDIR)/$*.$(DEPEXT)"; \
+-	else rm -f "$(DEPDIR)/$*.Tpo"; exit 1; \
+-	fi
+-
+-.cpp.$(OBJEXT) .cxx.$(OBJEXT):
+-	$(cxxcompile) -c -o $@ $<
++	$(call link_dl_lib,$@)
+ 
+-.cpp.obj:
+-	if $(cxxcompile) -c -o $@ \
+-	  `if test -f '$<'; then $(CYGPATH_W) '$<'; else $(CYGPATH_W) '$(srcdir)/$<'; fi`; \
+-	then mv "$(DEPDIR)/$*.Tpo" "$(DEPDIR)/$*.$(DEPEXT)"; \
+-	else rm -f "$(DEPDIR)/$*.Tpo"; exit 1; \
+-	fi
++%.$(JNIEXT) ../%.$(JNIEXT): $(objfiles)
++	$(call link_dl_lib,$@)
+ 
+-else
++# The following define generic rules for creating object files.
+ 
+-.c.$(OBJEXT):
++.c.lo:
+ 	$(compile) -MT $@ -MD -MP -MF "$(DEPDIR)/$*.$(DEPEXT)" -c -o $@ $<
+ 
+ .c.obj:
+@@ -199,7 +175,7 @@
+ 	else rm -f "$(DEPDIR)/$*.Tpo"; exit 1; \
+ 	fi
+ 
+-.cpp.$(OBJEXT) .cxx.$(OBJEXT):
++.cpp.lo .cxx.lo:
+ 	$(cxxcompile) -MT $@ -MD -MP -MF "$(DEPDIR)/$*.$(DEPEXT)" -c -o $@ $<
+ 
+ .cpp.obj:
+@@ -209,8 +185,6 @@
+ 	else rm -f "$(DEPDIR)/$*.Tpo"; exit 1; \
+ 	fi
+ 
+-endif
+-
+ ifeq "$(HOST_TYPE)" "darwin"
+ 
+ %.bundle ../%.bundle: $(objfiles)
+@@ -324,18 +298,7 @@
+ 
+ define install_library
+   $(MKINSTALLDIRS) $(DESTDIR)$(LIBDIR)
+-  @if test "$(suffix $(1))" = ".so" -o "$(suffix $(1))" = ".dylib" -o "$(suffix $(1))" = ".jnilib"; then \
+-    finalname="$(notdir $(basename $(1))).$(library_version)$(suffix $(1))"; \
+-    echo $(INSTALL_SH) $(1) $(2)/$$finalname; \
+-    $(INSTALL_SH) $(1) $(2)/$$finalname; \
+-    echo $(install_strip) $(1) $(2)/$$finalname; \
+-    $(install_strip) $(1) $(2)/$$finalname; \
+-    echo ln -fs $$finalname $(2)/$(notdir $(1)); \
+-    ln -fs $$finalname $(2)/$(notdir $(1)); \
+-  else \
+-    echo $(INSTALL_SH) $(1) $(2); \
+-    $(INSTALL_SH) $(1) $(2); \
+-  fi
++  $(LIBTOOL) --mode=install $(INSTALL_SH) $(1) $(DESTDIR)/$(LIBDIR)
+ endef
+ 
+ to_install_libraries = $(addprefix install-,$(libraries))
+@@ -408,7 +371,7 @@
+ 
+ define uninstall_library
+   @if test -f $(1); then \
+-    finalname="$(notdir $(basename $(1))).$(library_version)$(suffix $(1))"; \
++    finalname="$(notdir $(basename $(1)))$(suffix $(1)).$(library_version)"; \
+     target="$(2)/$$finalname"; \
+     if test -f $$target ; then \
+       echo rm $$target; \
+@@ -555,7 +518,7 @@
+ clean-normal: mostlyclean clean-libraries clean-libtool clean-extras
+ 
+ clean-generic:
+-	-rm -f *.$(OBJEXT) core *.core
++	-rm -f *.lo *.$(OBJEXT) core *.core
+ 
+ clean-libtool:
+ 	-rm -rf .libs _libs
+@@ -575,7 +538,7 @@
+ endif
+ 
+ mostlyclean-libtool:
+-	-rm -f *.lo
++	-rm -f *.lo *.la *.loT
+ 
+ distclean: clean distclean-compile distclean-depend distclean-generic \
+ 	distclean-tags distclean-libtool
+diff -urNad libsbml-3.1.1~/config/makefile-common-vars.mk.in libsbml-3.1.1/config/makefile-common-vars.mk.in
+--- libsbml-3.1.1~/config/makefile-common-vars.mk.in	2008-07-18 05:50:16.907919523 +0900
++++ libsbml-3.1.1/config/makefile-common-vars.mk.in	2008-07-18 05:50:18.000000000 +0900
+@@ -136,6 +136,9 @@
+ OCTAVE            = @OCTAVE@
+ MKOCTFILE         = @MKOCTFILE@
+ MKOCTFILE_FLAGS   = @MKOCTFILE_FLAGS@
++MKOCTFILE_WRAPPER = $(SHELL) $(top_srcdir)/config/mkoctfile_wrapper.sh
++LOCALOCTFILEDIR   = @LOCALOCTFILEDIR@
++OCTAVE_CONFIG     = @OCTAVE_CONFIG@
+ OCTAVEEXT         = @OCTAVEEXT@
+ 
+ USE_LISP          = @USE_LISP@
+@@ -201,6 +204,7 @@
+ PACKAGE_VERSION   = @PACKAGE_VERSION@
+ RANLIB            = @RANLIB@
+ SHAREDLIBEXT      = @SHAREDLIBEXT@
++LIBTOOL           = @LIBTOOL@
+ SHELL             = @SHELL@
+ 
+ LIBSBML_VERSION   = @PACKAGE_VERSION@
+diff -urNad libsbml-3.1.1~/config/mkoctfile_wrapper.sh.in libsbml-3.1.1/config/mkoctfile_wrapper.sh.in
+--- libsbml-3.1.1~/config/mkoctfile_wrapper.sh.in	1970-01-01 09:00:00.000000000 +0900
++++ libsbml-3.1.1/config/mkoctfile_wrapper.sh.in	2008-07-18 05:50:39.000000000 +0900
+@@ -0,0 +1,14 @@
++#!/bin/sh
++SHAREDLIBEXT=@SHAREDLIBEXT@
++
++args=
++while test ! -z "$1"; do
++    if test -f "$1" && expr "$1" : ".*lib.*\\.$SHAREDLIBEXT\$" > /dev/null; then
++        args="$args '-L`dirname \"$1\"`' '-l`basename \"$1\" \".$SHAREDLIBEXT\" | sed -e 's/^lib//'`'"
++    elif test "$1" != "-fPIC"; then
++        args="$args '$1'"
++    fi
++    shift
++done
++
++eval "exec $args"
+diff -urNad libsbml-3.1.1~/config/octave.m4 libsbml-3.1.1/config/octave.m4
+--- libsbml-3.1.1~/config/octave.m4	2008-07-18 05:50:16.907919523 +0900
++++ libsbml-3.1.1/config/octave.m4	2008-07-18 05:50:18.000000000 +0900
+@@ -42,9 +42,13 @@
+                      [no-octave-found], [$with_octave/bin])
+       AC_PATH_PROG([MKOCTFILE], [mkoctfile], [$with_octave/bin/mkoctfile],
+                      [no-mkoctfile-found], [$with_octave/bin])
++      AC_PATH_PROG([OCTAVE_CONFIG], [octave-config],
++                   [$with_octave/bin/octave-config],
++                     [no-octave-config-found], [$with_octave/bin])
+     else
+       AC_PATH_PROG([OCTAVE], [octave])
+       AC_PATH_PROG([MKOCTFILE], [mkoctfile])
++      AC_PATH_PROG([OCTAVE_CONFIG], [octave-config])
+     fi
+ 
+     if test -z "$OCTAVE"; then
+@@ -131,13 +135,13 @@
+       fi
+     fi
+ 
+-    dnl The following should probably be conditional on the platform, but I
+-    dnl don't have enough experience right now to figure out what the 
+-    dnl variations need to be.  So punt.
+-
+     MKOCTFILE_FLAGS="--mex"
+     OCTAVEEXT="mex"
+ 
++    dnl get rid of prefix part from the directory name of the local oct file
++    dnl repository in order to rebase it later.
++    LOCALOCTFILEDIR=`"$OCTAVE_CONFIG" -p LOCALOCTFILEDIR | sed -e "s#^\`\"$OCTAVE_CONFIG\" -p PREFIX\`##"`
++
+     AC_DEFINE([USE_OCTAVE], 1, [Define to 1 to use Octave])
+     AC_SUBST(USE_OCTAVE, 1)
+ 
+@@ -145,6 +149,7 @@
+     AC_SUBST(MKOCTFILE)
+     AC_SUBST(MKOCTFILE_FLAGS)
+     AC_SUBST(OCTAVEEXT)
++    AC_SUBST(LOCALOCTFILEDIR) 
+ 
+   fi
+ 
+diff -urNad libsbml-3.1.1~/configure.ac libsbml-3.1.1/configure.ac
+--- libsbml-3.1.1~/configure.ac	2008-07-18 05:50:16.907919523 +0900
++++ libsbml-3.1.1/configure.ac	2008-07-18 05:50:18.000000000 +0900
+@@ -133,13 +133,15 @@
+ AC_PROG_CXX
+ AC_PROG_CC
+ AC_PROG_CPP
+-AC_PROG_RANLIB
++AC_LIBTOOL_WIN32_DLL
++AC_PROG_LIBTOOL
+ AC_PROG_INSTALL
+ AC_PROG_MAKE_SET
+ 
++AC_SUBST(LIBTOOL)
++
+ AC_PATH_PROG([AUTOCONF],[autoconf],[autoconf])
+ AC_PATH_PROG([ACLOCAL],[aclocal],[aclocal])
+-AC_PATH_PROG([AR],[ar],[ar])
+ 
+ CONFIG_PROG_SWIG(1.3.33)
+ CONFIG_PROG_PYTHON
+@@ -225,7 +227,9 @@
+ dnl Output
+ dnl ---------------------------------------------------------------------------
+ 
++AC_CONFIG_FILES([config/lt_link_helper.sh], [chmod a+x config/lt_link_helper.sh])
+ AC_CONFIG_FILES([config/makefile-common-vars.mk])
++AC_CONFIG_FILES([config/mkoctfile_wrapper.sh], [chmod a+x config/mkoctfile_wrapper.sh])
+ AC_CONFIG_FILES([./Makefile])
+ 
+ AC_CONFIG_FILES([src/Makefile])
+diff -urNad libsbml-3.1.1~/src/bindings/java/Makefile.in libsbml-3.1.1/src/bindings/java/Makefile.in
+--- libsbml-3.1.1~/src/bindings/java/Makefile.in	2008-07-18 05:50:17.907976893 +0900
++++ libsbml-3.1.1/src/bindings/java/Makefile.in	2008-07-18 05:50:18.000000000 +0900
+@@ -60,9 +60,9 @@
+ extra_CPPFLAGS    = $(JAVA_CPPFLAGS) -I../swig
+ SWIGFLAGS        += $(JAVA_CPPFLAGS) -I../swig
+ 
+-extra_LDFLAGS     = $(JAVA_LDFLAGS) -L../..
++extra_LDFLAGS     = $(JAVA_LDFLAGS)
+ 
+-extra_LIBS        = -lsbml $(JAVA_LIBS)
++extra_LIBS        = ../../libsbml.la $(JAVA_LIBS)
+ 
+ ifdef USE_EXPAT
+   extra_CPPFLAGS += @EXPAT_CPPFLAGS@ 
+@@ -142,7 +142,7 @@
+ # build directives of `makefile-common-actions.mk'.
+ 
+ .SUFFIXES:
+-.SUFFIXES: .i .cpp .h .java .class .jar .o .obj .so .dylib
++.SUFFIXES: .i .cpp .h .java .class .jar .lo .la .o .obj .so .dylib
+ 
+ # The default action is to remake everything.
+ 
+@@ -285,9 +285,17 @@
+ # -----------------------------------------------------------------------------
+ 
+ install: $(libraries)
+-	@list='$(libraries)'; for lib in $$list; do \
+-	  echo "$(INSTALL) $$lib $(DESTDIR)$(LIBDIR)"; \
+-	  $(INSTALL) $$lib $(DESTDIR)$(LIBDIR); \
++	list='$(libraries)'; for lib in $$list; do \
++	  if echo $$lib | grep '\.$(JNIEXT)$$' >/dev/null; then \
++		$(MKINSTALLDIRS) $(DESTDIR)$(LIBDIR)/jni; \
++	    $(INSTALL_SH) $$lib $(DESTDIR)$(LIBDIR)/jni; \
++	  elif echo $$lib | grep '\.jar$$' >/dev/null; then \
++		$(MKINSTALLDIRS) $(DESTDIR)$(DATADIR)/java; \
++	    $(INSTALL_SH) $$lib $(DESTDIR)$(DATADIR)/java; \
++	  else \
++		$(MKINSTALLDIRS) $(DESTDIR)$(LIBDIR); \
++	    $(INSTALL_SH) $$lib $(DESTDIR)$(LIBDIR); \
++	  fi; \
+ 	done;
+ 
+ uninstall:
+diff -urNad libsbml-3.1.1~/src/bindings/octave/Makefile.in libsbml-3.1.1/src/bindings/octave/Makefile.in
+--- libsbml-3.1.1~/src/bindings/octave/Makefile.in	2008-07-18 05:50:16.907919523 +0900
++++ libsbml-3.1.1/src/bindings/octave/Makefile.in	2008-07-18 05:50:18.000000000 +0900
+@@ -76,7 +76,7 @@
+ # `extra_clean' and `extra_distclean' determine the files and directories
+ # removed during "make clean" and "make distclean".
+ 
+-extra_clean = TranslateSBML.$(OCTAVEEXT)
++extra_clean = TranslateSBML.$(OCTAVEEXT) libsbml.so* libsbml.a
+ 
+ extra_disclean = $(matlab_sources)
+ 
+@@ -95,10 +95,13 @@
+ 	  fi; \
+ 	done
+ 
+-flags = $(MKOCTFILE_FLAGS) -DUSE_OCTAVE -I../.. -I../../../include -L../..
++flags = $(MKOCTFILE_FLAGS) -DUSE_OCTAVE -I../.. -I../../../include
+ 
+-%.$(OCTAVEEXT): %.c
+-	$(MKOCTFILE) $(flags) $^ -lsbml $(MKOCTFILE_LIBS)
++TranslateSBML.lo: TranslateSBML.c
++	$(LIBTOOL) --tag=CC --mode=compile $(MKOCTFILE_WRAPPER) $(MKOCTFILE) -c -o $@ $(flags) $<
++
++%.$(OCTAVEEXT): %.lo
++	$(TOP_SRCDIR)/config/lt_link_helper.sh $(MKOCTFILE_WRAPPER) --libdir $(LIBDIR) $(MKOCTFILE) -o $@ $(flags) $^ ../../libsbml.la $(MKOCTFILE_LIBS)
+ 
+ 
+ # -----------------------------------------------------------------------------
+@@ -124,11 +127,17 @@
+ # Installation.
+ # -----------------------------------------------------------------------------
+ 
+-install: all install-libraries
++install: all
++	for i in $(libraries); do \
++	  $(INSTALL_SH) $$i $(DESTDIR)$(prefix)$(LOCALOCTFILEDIR)/$$i; \
++	done
+ 
+ installdirs: all
+ 
+-uninstall: uninstall-libraries
++uninstall:
++	for i in $(libraries); do \
++	  rm $(DESTDIR)$(prefix)$(LOCALOCTFILEDIR)/$$i; \
++	done
+ 
+ 
+ # -----------------------------------------------------------------------------
+diff -urNad libsbml-3.1.1~/src/bindings/perl/Makefile.PL.in libsbml-3.1.1/src/bindings/perl/Makefile.PL.in
+--- libsbml-3.1.1~/src/bindings/perl/Makefile.PL.in	2008-07-18 05:50:16.907919523 +0900
++++ libsbml-3.1.1/src/bindings/perl/Makefile.PL.in	2008-07-18 05:50:18.000000000 +0900
+@@ -50,10 +50,9 @@
+               MAKEFILE    => 'Makefile-perl',
+               INSTALLDIRS => "site",
+               LIBS        => "@XERCES_LDFLAGS@ @EXPAT_LDFLAGS@ @LIBXML_LDFLAGS@ @XERCES_LIBS@ @EXPAT_LIBS@ @LIBXML_LIBS@ -lm -lstdc++",
+-	      CC          => "@CXX@",
+ 	      CCFLAGS     => "@PERL_CPPFLAGS@",
+               INC         => "-I../swig -I../.. -I../../../include",
+-              MYEXTLIB    => "../../libsbml.a",
++              MYEXTLIB    => "../../libsbml.la",
+               macro       => {USE_SWIG => q[@USE_SWIG@]},
+               OBJECT      => "LibSBML_wrap.o",
+ 	      MAN1PODS    => {},
+diff -urNad libsbml-3.1.1~/src/bindings/perl/Makefile.in libsbml-3.1.1/src/bindings/perl/Makefile.in
+--- libsbml-3.1.1~/src/bindings/perl/Makefile.in	2008-07-18 05:50:16.907919523 +0900
++++ libsbml-3.1.1/src/bindings/perl/Makefile.in	2008-07-18 05:50:18.000000000 +0900
+@@ -138,7 +138,9 @@
+ 	@ echo "Reconfigure --with-perl in order to build the perl-bindings"
+ 	exit 1
+ else
+-	$(PERL) Makefile.PL $(if $(LIB),LIB=$(LIB),)
++	$(PERL) Makefile.PL $(if $(LIB),LIB=$(LIB),) \
++	  CC="$(LIBTOOL) --mode=compile $(CXX)" \
++	  LD="$(TOP_SRCDIR)/config/lt_link_helper.sh $(CXX) --libdir $(LIBDIR)"
+ # The following perl commands add missing -lstdc++ option to EXTRALIBS and
+ # LDLOADLIBS in Makefile-perl.
+ # ExtUtil::Makemaker may ignore -lstdc++ option in some environments (e.g. MacOSX, cygwin)
+diff -urNad libsbml-3.1.1~/src/bindings/python/Makefile.in libsbml-3.1.1/src/bindings/python/Makefile.in
+--- libsbml-3.1.1~/src/bindings/python/Makefile.in	2008-07-18 05:50:16.907919523 +0900
++++ libsbml-3.1.1/src/bindings/python/Makefile.in	2008-07-18 05:50:18.000000000 +0900
+@@ -78,8 +78,8 @@
+   extra_CPPFLAGS += -Wno-long-double
+ endif
+ 
+-extra_LDFLAGS  = $(PYTHON_LDFLAGS) -L../..
+-extra_LIBS     = -lsbml $(PYTHON_LIBS)
++extra_LDFLAGS  = $(PYTHON_LDFLAGS)
++extra_LIBS     = ../../libsbml.la $(PYTHON_LIBS)
+ 
+ ifdef USE_EXPAT
+   extra_CPPFLAGS += @EXPAT_CPPFLAGS@ 
+@@ -146,9 +146,9 @@
+ # -----------------------------------------------------------------------------
+ 
+ .SUFFIXES:
+-.SUFFIXES: .i .cpp .py .pyc .pyo .o .obj
++.SUFFIXES: .i .cpp .py .pyc .pyo .lo .la .o .obj
+ 
+-objfiles = libsbml_wrap.$(OBJEXT)
++objfiles = libsbml_wrap.lo
+ test_objfiles = $(objfiles)
+ 
+ # The default action is to remake everything.
+diff -urNad libsbml-3.1.1~/src/bindings/ruby/Makefile.in libsbml-3.1.1/src/bindings/ruby/Makefile.in
+--- libsbml-3.1.1~/src/bindings/ruby/Makefile.in	2008-07-18 05:50:16.907919523 +0900
++++ libsbml-3.1.1/src/bindings/ruby/Makefile.in	2008-07-18 05:50:18.000000000 +0900
+@@ -79,7 +79,7 @@
+ endif
+ 
+ extra_LDFLAGS  = $(RUBY_LDFLAGS)
+-extra_LIBS     = -L../.. -lsbml $(RUBY_LIBS)
++extra_LIBS     = ../../libsbml.la $(RUBY_LIBS)
+ 
+ ifdef USE_EXPAT
+   extra_CPPFLAGS += @EXPAT_CPPFLAGS@ 
+@@ -134,7 +134,7 @@
+ .SUFFIXES:
+ .SUFFIXES: .i .cpp .o .obj
+ 
+-objfiles = libsbml_wrap.$(OBJEXT)
++objfiles = libsbml_wrap.lo
+ test_objfiles = $(objfiles)
+ 
+ # The default action is to remake everything.
+@@ -237,13 +237,18 @@
+ # -----------------------------------------------------------------------------
+ 
+ install:
+-	$(RUBY) -rfileutils -rrbconfig -e "include FileUtils::Verbose; mkpath(\"$(DESTDIR)$(LIBDIR)\")"
+-	$(RUBY) -rfileutils -rrbconfig -e "include FileUtils::Verbose; install(\"$(libraries)\", \"$(DESTDIR)$(LIBDIR)\")"
++	archdir=`$(RUBY) -rrbconfig -e 'print Config::CONFIG["archdir"]'`; \
++	for i in $(libraries); do \
++	  $(INSTALL_SH) $$i $(DESTDIR)$$archdir/$$i; \
++	done
+ 
+ installcheck:
+ 
+ uninstall:
+-	$(RUBY) -rfileutils -rrbconfig -e "include FileUtils::Verbose; rm(\"$(DESTDIR)$(LIBDIR)\" + \"/\" + \"$(libraries)\")"
++	archdir=`$(RUBY) -rrbconfig -e 'print Config::CONFIG["archdir"]'`; \
++	for i in $(libraries); do \
++	  rm $(DESTDIR)$$archdir/$$i; \
++	done
+ 
+ # -----------------------------------------------------------------------------
+ # Creating distribution (for libSBML maintainers only)
+diff -urNad libsbml-3.1.1~/src/sbml/Makefile.in libsbml-3.1.1/src/sbml/Makefile.in
+--- libsbml-3.1.1~/src/sbml/Makefile.in	2008-07-18 05:50:16.907919523 +0900
++++ libsbml-3.1.1/src/sbml/Makefile.in	2008-07-18 05:50:18.000000000 +0900
+@@ -170,19 +170,7 @@
+ 
+ # The libraries are actually placed in the parent directory.
+ 
+-ifeq "$(HOST_TYPE)" "aix"
+-# The nutty thing about AIX is that it uses the same extension (.a) for both
+-# shared and static libraries.  You have to pick whether you want one or
+-# the other; you can't provide both at the same time.  I'd like to know why
+-# they thought this was a good idea.
+-
+-libraries = ../$(PACKAGE).$(SHAREDLIBEXT)
+-
+-else
+-
+-libraries = ../$(PACKAGE).a ../$(PACKAGE).$(SHAREDLIBEXT)
+-
+-endif
++libraries = ../$(PACKAGE).a ../$(PACKAGE).la
+ 
+ # `distfiles' determines the files and directories included in a distribution.
+ # `distfiles_exclude' is used to filter out specific items, so that even if

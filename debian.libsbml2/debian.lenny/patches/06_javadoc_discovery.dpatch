@@ -1,0 +1,151 @@
+#! /bin/sh /usr/share/dpatch/dpatch-run
+## 06_javadoc_discovery.dpatch by  <moriyoshi@dynein>
+##
+## All lines beginning with `## DP:' are a description of the patch.
+## DP: No description.
+
+@DPATCH@
+diff -urNad libsbml-3.1.1~/config/java.m4 libsbml-3.1.1/config/java.m4
+--- libsbml-3.1.1~/config/java.m4	2008-06-21 17:43:27.907744015 +0900
++++ libsbml-3.1.1/config/java.m4	2008-06-21 17:43:37.000000000 +0900
+@@ -46,10 +46,13 @@
+                      [no-javac-found], [$with_java/bin])
+       AC_PATH_PROG([JAR], [jar], [$with_java/bin/jar],
+                      [no-jar-found], [$with_java/bin])
++      AC_PATH_PROG([JAVADOC], [javadoc], [$with_java/bin/javadoc],
++                     [no-jar-found], [$with_java/bin])
+     else
+       AC_PATH_PROG([JAVA], [java])
+       AC_PATH_PROG([JAVAC], [javac])
+       AC_PATH_PROG([JAR], [jar])
++      AC_PATH_PROG([JAVADOC], [javadoc])
+     fi
+ 
+     dnl Sanity checks.
+diff -urNad libsbml-3.1.1~/config/makefile-common-vars.mk.in libsbml-3.1.1/config/makefile-common-vars.mk.in
+--- libsbml-3.1.1~/config/makefile-common-vars.mk.in	2008-06-21 17:43:27.907744015 +0900
++++ libsbml-3.1.1/config/makefile-common-vars.mk.in	2008-06-21 17:43:37.000000000 +0900
+@@ -117,6 +117,7 @@
+ JAVA              = @JAVA@
+ JAVAC             = @JAVAC@
+ JAR               = @JAR@
++JAVADOC           = @JAVADOC@
+ JAVA_CPPFLAGS     = @JAVA_CPPFLAGS@
+ JAVA_LDFLAGS      = @JAVA_LDFLAGS@
+ JAVA_LIBS         = @JAVA_LIBS@
+diff -urNad libsbml-3.1.1~/docs/src/ExcludeDoclet.java libsbml-3.1.1/docs/src/ExcludeDoclet.java
+--- libsbml-3.1.1~/docs/src/ExcludeDoclet.java	2008-06-21 17:43:26.907687077 +0900
++++ libsbml-3.1.1/docs/src/ExcludeDoclet.java	2008-06-21 17:50:42.000000000 +0900
+@@ -97,7 +97,6 @@
+ 
+ import java.io.*;
+ import java.util.*;
+-import com.sun.tools.javadoc.Main;
+ import com.sun.javadoc.*;
+ 
+ /**
+@@ -109,14 +108,14 @@
+ public class ExcludeDoclet extends Doclet {
+     private static List m_args = new ArrayList();
+     private static Set m_excludeSet = new HashSet();
+-    
++
+     /**
+      * Iterate through the documented classes and remove the ones that should
+      * be excluded.
+      * 
+      * @param root the initial RootDoc (before filtering).
+      */
+-    public static boolean start(RootDoc root){
++    public static boolean start(RootDoc root) {
+         root.printNotice("ExcludeDoclet: removing excluded source files...");
+         ClassDoc[] classes = root.classes();
+         for (int i = 0; i < classes.length; i++) {
+@@ -126,10 +125,24 @@
+                 continue;
+                 
+             }
++
+             m_args.add(classes[i].position().file().getPath());   
+         }
+-        return true;
+         
++        Class[] callees = (new SecurityManager() {
++            public Class[] getClassContext() {
++                return super.getClassContext();
++            }
++        }).getClassContext();
++
++        try {
++            callees[callees.length - 1].getMethod("execute",
++                new Class[] { String[].class }).invoke(
++                    null, new Object[] { m_args.toArray(new String[] {}) });
++        } catch (Exception e) {
++            e.printStackTrace();
++        }
++        return false;
+     }
+     
+     /**
+@@ -151,8 +164,10 @@
+                 }
+                 continue;
+             }
+-            if (options[i][0].equals("-subpackages")) {
+-                continue;   
++            if (options[i][0].equals("-subpackages") ||
++                options[i][0].equals("-doclet") ||
++                options[i][0].equals("-docletpath")) {
++                continue;
+             }
+             for (int j = 0; j < options[i].length; j++) {
+                 m_args.add(options[i][j]);   
+@@ -252,22 +267,12 @@
+                    option.equals("-helpfile") ||
+                    option.equals("-stylesheetfile") ||
+                    option.equals("-charset") ||
+-                   option.equals("-overview")) {
++                   option.equals("-overview") ||
++                   option.equals("-doclet") ||
++                   option.equals("-docletpath")) {
+             return 2;
+         } else {
+             return 0;
+         }
+     }
+-     
+-    /**
+-     * Execute this doclet to filter out the unwanted classes and packages.  
+-     * Then execute the standard doclet.
+-     * 
+-     * @param args  the Javadoc arguments from the command line
+-     */
+-    public static void main(String[] args) {
+-        String name = ExcludeDoclet.class.getName();
+-        Main.execute(name, name, args);
+-        Main.execute((String[]) m_args.toArray(new String[] {}));
+-    }
+ }
+diff -urNad libsbml-3.1.1~/docs/src/Makefile.in libsbml-3.1.1/docs/src/Makefile.in
+--- libsbml-3.1.1~/docs/src/Makefile.in	2008-06-21 17:43:27.907744015 +0900
++++ libsbml-3.1.1/docs/src/Makefile.in	2008-06-21 17:43:37.000000000 +0900
+@@ -315,10 +315,6 @@
+   | sed -e 's/%%title%%/$(3)/g;s/%%version%%/@PACKAGE_VERSION@/g' > $(2)
+ endef
+ 
+-# FIXME this isn't portable, but I don't have time to solve it right now.
+-
+-javadoc-jar = /System/Library/Frameworks/JavaVM.framework/Classes/classes.jar
+-
+ # There are certain things I can't figure out how to make compatible
+ # between doxygen and javadoc.  Let's ignore the warnings to avoid
+ # confusing users.
+@@ -326,7 +322,7 @@
+ ignorable-warnings = "warning - @param argument"
+ 
+ java-manual $(java-manual): $(core-sources)
+-	$(JAVA) -cp $(javadoc-jar):. ExcludeDoclet -excludefile java-skip.txt \
++	$(JAVADOC) -docletpath . -doclet ExcludeDoclet -excludefile java-skip.txt \
+             -use -public -version -author -sourcetab 4 -keywords \
+ 	    -header $(javadoc-header) \
+ 	    -bottom $(javadoc-footer) \

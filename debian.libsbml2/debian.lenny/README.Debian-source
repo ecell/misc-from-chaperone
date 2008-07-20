@@ -1,0 +1,7 @@
+the source package have only .zip file format, and have some CVS directory
+which make lintian complain. So I repack it and delete all CVS directory.
+
+unzip libsbml.2.3.4.zip
+find libsbml.2.3.4 -name "CVS" -exec rm -rf {} \;
+tar cvzf libsbml.2.3.4 > libsbml.2.3.4.tar.gz
+
