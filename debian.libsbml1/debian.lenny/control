@@ -2,9 +2,9 @@ Source: libsbml
 Priority: optional
 Maintainer: Steffen Moeller <moeller@pzr.uni-rostock.de>, Changyan Xie <panchoat@gmail.com>, Moriyoshi Koizumi <mozo@sfc.keio.ac.jp>
 Build-Depends: debhelper (>= 4.0.0), dpatch,
- autoconf, automake, libtool (>= 1.5.0), build-essential,
- libxerces27-dev, swig, python-dev, libperl-dev, java-gcj-compat-dev | java-sdk,
- fastjar, python-support (>= 0.3), tetex-bin, tetex-extra, latex2html, doxygen
+ autoconf, automake, libtool (>= 1.5.0), build-essential, libxerces-c2-dev,
+ swig, python-dev, libperl-dev, java-gcj-compat-dev | java-sdk,
+ fastjar, python-support (>= 0.3), texlive (>=2007), texlive-pictures (>=2007), texlive-fonts-extra (>=2007), texlive-latex-extra (>=2007), texlive-font-utils (>=2007), texlive-pstricks (>=2007), texlive-math-extra (>=2007), texlive-publishers (>=2007), texlive-extra-utils (>=2007), latex2html, doxygen
 Standards-Version: 3.7.2
 Section: contrib/science
 XS-Vcs-Browser: http://svn.debian.org/wsvn/debian-med/trunk/packages/libsbml/trunk/
@@ -110,8 +110,8 @@ Description: System Biology Markup Language Library -- Java Binding
 
 Package: libsbml2-perl
 Section: contrib/perl
-Provides:  libsbml-perl
 Architecture: any
+Provides: libsbml-perl
 Depends: ${shlibs:Depends}, ${perl:Depends}, ${misc:Depends}, perl
 Description: System Biology Markup Language Library --Perl binding
  LibSBML is a library designed to help you read, write, manipulate, 

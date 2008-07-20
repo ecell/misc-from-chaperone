@@ -1,3 +1,10 @@
+libsbml (2.3.5-3) etch; urgency=low
+
+  * Use lt_link_helper.sh for all the bindings so that they will dynamically
+    linked to the libsbml shared library.
+
+ -- Moriyoshi Koizumi <mozo@sfc.keio.ac.jp>  Fri, 18 Jul 2008 19:09:15 +0900
+
 libsbml (2.3.5-2) etch; urgency=low
 
   * Changed package versioning scheme

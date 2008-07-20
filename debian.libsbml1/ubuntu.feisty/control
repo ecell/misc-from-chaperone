@@ -39,6 +39,7 @@ Package: libsbml2
 Section: contrib/libs
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}
+Conflicts: libsbml1
 Description: System Biology Markup Language Library
  LibSBML is a library designed to help you read, write, manipulate, 
  translate, and validate SBML files and data streams. It is not an 
@@ -59,7 +60,7 @@ Description: System Biology Markup Language Library
 
 Package: python-sbml2
 Section: contrib/python
-Provides: ${python:Provides}
+Provides: ${python:Provides}, python-sbml
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}, ${python:Depends}
 Description: System Biology Markup Language Library -- Python Binding

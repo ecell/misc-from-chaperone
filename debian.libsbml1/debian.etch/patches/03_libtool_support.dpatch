@@ -15,7 +15,7 @@ exit 0
 @DPATCH@
 diff -urNad libsbml-2.3.5~/acinclude.m4 libsbml-2.3.5/acinclude.m4
 --- libsbml-2.3.5~/acinclude.m4	1970-01-01 09:00:00.000000000 +0900
-+++ libsbml-2.3.5/acinclude.m4	2008-06-25 16:05:36.000000000 +0900
++++ libsbml-2.3.5/acinclude.m4	2008-07-18 18:55:01.000000000 +0900
 @@ -0,0 +1,23 @@
 +# generated automatically by aclocal 1.8.5 -*- Autoconf -*-
 +
@@ -40,9 +40,82 @@ diff -urNad libsbml-2.3.5~/acinclude.m4 libsbml-2.3.5/acinclude.m4
 +m4_include([config/runldpath.m4])
 +m4_include([config/swig.m4])
 +m4_include([config/xercesc.m4])
+diff -urNad libsbml-2.3.5~/config/lt_link_helper.sh.in libsbml-2.3.5/config/lt_link_helper.sh.in
+--- libsbml-2.3.5~/config/lt_link_helper.sh.in	1970-01-01 09:00:00.000000000 +0900
++++ libsbml-2.3.5/config/lt_link_helper.sh.in	2008-07-18 18:55:01.000000000 +0900
+@@ -0,0 +1,69 @@
++#!/bin/sh
++
++libdir=@prefix@/lib
++
++progname=`basename "$0"`
++
++dllibext=
++out_dir=
++out_file=
++out_filename=
++args=
++
++TAG=CXX
++
++if test -z "$1"; then
++    echo "${progname}: linker executable must be specified." >&2
++    exit
++fi
++
++linker_tmpdir=`mktemp -d`
++stage_dir="${linker_tmpdir}/stage"
++mkdir -p "${stage_dir}"
++
++LD="$1"
++shift
++
++while test -n "$1"; do
++    case "$1" in
++        --tag=*)
++            TAG=`echo "$1" | sed -e 's/^--tag=//'`
++            ;;
++        -o)
++            shift
++            out_file="$1"
++            dllibext=`echo "${out_file}" | sed -e 's/.*\(\.[^.]*\)$/\1/'`
++            out_dir=`dirname "${out_file}"`
++            out_filename=`basename "${out_file}" "${dllibext}"`
++            ;;
++        *.o)
++            lt_obj=`echo "$1" | sed -e 's/\.o$/.lo/'`
++            args="${args} \"${lt_obj}\""
++            ;;
++        --libdir)
++            shift
++            libdir="$1" 
++            ;;
++        lib*.la | */lib*.la)
++            mkdir -p "${stage_dir}/${libdir}" && \
++                eval "@abs_top_srcdir@/libtool --mode=install cp \"$1\" \"${stage_dir}/${libdir}\""
++            libname=`basename "$1" | sed -e 's/lib\([^.]*\)\.la/\1/'`
++            args="${args} \"$1\""
++            ;; 
++        *)
++            args="${args} \"$1\""
++            ;;
++    esac
++    shift
++done
++
++if test -z "$out_file"; then
++    echo "${progname}: -o option not specified." >&2
++    rm -rf "${linker_tmpdir}"
++    exit 1
++fi
++
++eval "@abs_top_srcdir@/libtool --tag=\"$TAG\" --mode=link \"$LD\" -rpath \"${libdir}\" -inst-prefix-dir \"${stage_dir}\" -module -avoid-version -export-dynamic -no-undefined -shrext "${dllibext}" -o \"${out_dir}/${out_filename}.la\" $args" && \
++    eval "@abs_top_srcdir@/libtool --mode=install cp \"${out_dir}/${out_filename}.la\" \"${stage_dir}/${libdir}\"" && \
++    cp "${stage_dir}/${libdir}/${out_filename}${dllibext}" "${out_dir}"
++rm -rf "${linker_tmpdir}"
 diff -urNad libsbml-2.3.5~/config/makefile-common-actions.mk libsbml-2.3.5/config/makefile-common-actions.mk
---- libsbml-2.3.5~/config/makefile-common-actions.mk	2008-06-25 16:05:27.767275542 +0900
-+++ libsbml-2.3.5/config/makefile-common-actions.mk	2008-06-25 16:27:22.000000000 +0900
+--- libsbml-2.3.5~/config/makefile-common-actions.mk	2008-07-18 18:54:59.090980534 +0900
++++ libsbml-2.3.5/config/makefile-common-actions.mk	2008-07-18 18:56:20.000000000 +0900
 @@ -65,7 +65,7 @@
  # -----------------------------------------------------------------------------
  
@@ -97,7 +170,7 @@ diff -urNad libsbml-2.3.5~/config/makefile-common-actions.mk libsbml-2.3.5/confi
  endif
  
  # The following defines the default function for linking objects into a
-@@ -114,8 +111,21 @@
+@@ -114,8 +111,19 @@
  
  ifndef link_shared_lib
    define link_shared_lib 
@@ -113,27 +186,25 @@ diff -urNad libsbml-2.3.5~/config/makefile-common-actions.mk libsbml-2.3.5/confi
 +
 +ifndef link_dl_lib
 +  define link_dl_lib
-+    $(LIBTOOL) --mode=link $(CXX) $(LDFLAGS) $(extra_LDFLAGS) \
-+    -module -avoid-version -export-dynamic -no-undefined \
-+    -inst-prefix-dir "$(DESTDIR)" \
-+    $(platform_link_flags) -rpath $(abspath $(dir $(1))) \
-+    -o $(1:.$(SHAREDLIBEXT)=.la) $(objfiles:.o=.lo) $(extra_LIBS) $(LIBS)
++    $(TOP_SRCDIR)/config/lt_link_helper.sh $(CXX) --libdir $(LIBDIR) \
++    $(LDFLAGS) $(extra_LDFLAGS) $(platform_link_flags) \
++    -o $(1) $(objfiles:.o=.lo) $(extra_LIBS) $(LIBS)
    endef
  endif
  
-@@ -127,8 +137,9 @@
+@@ -127,8 +135,9 @@
  
  define link_static_lib
    -rm -f $(1)
 -  $(AR) -cru $(1) $(objfiles)
 -  $(RANLIB) $(1)
 +  $(LIBTOOL) --mode=link $(CXX) $(LDFLAGS) $(extra_LDFLAGS) \
-+  -static -inst-prefix-dir $(DESTDIR) \
++  -static -inst-prefix-dir "$(DESTDIR)" \
 +  $(platform_link_flags) -o $(1) $(objfiles:.o=.lo)
  endef
  
  # Most of the sources are a mix of C and C++ files.  They have separate
-@@ -138,16 +149,16 @@
+@@ -138,16 +147,16 @@
  # filter the results.  This abstracts out this common operation.
  
  make_objects_list = \
@@ -155,7 +226,7 @@ diff -urNad libsbml-2.3.5~/config/makefile-common-actions.mk libsbml-2.3.5/confi
  
  # This next line includes the dependency files.  This doesn't use
  # $depfiles, but rather a wildcard on the actual files, so that if they
-@@ -164,21 +175,21 @@
+@@ -164,21 +173,21 @@
  %.a ../%.a: $(objfiles)
  	$(call link_static_lib,$@)
  
@@ -184,7 +255,7 @@ diff -urNad libsbml-2.3.5~/config/makefile-common-actions.mk libsbml-2.3.5/confi
  	$(cxxcompile) -MT $@ -MD -MP -MF "$(DEPDIR)/$*.$(DEPEXT)" -c -o $@ $<
  
  .c.obj:
-@@ -281,18 +292,19 @@
+@@ -281,18 +290,19 @@
  
  define install_library
    $(MKINSTALLDIRS) $(DESTDIR)$(LIBDIR)
@@ -216,7 +287,7 @@ diff -urNad libsbml-2.3.5~/config/makefile-common-actions.mk libsbml-2.3.5/confi
  endef
  
  to_install_libraries = $(addprefix install-,$(libraries))
-@@ -367,7 +379,7 @@
+@@ -367,7 +377,7 @@
  
  define uninstall_library
    @if test -f $(1); then \
@@ -225,7 +296,7 @@ diff -urNad libsbml-2.3.5~/config/makefile-common-actions.mk libsbml-2.3.5/confi
      target="$(2)/$$finalname"; \
      if test -f $$target ; then \
        echo rm $$target; \
-@@ -514,7 +526,7 @@
+@@ -514,7 +524,7 @@
  clean-normal: mostlyclean clean-libraries clean-libtool clean-extras
  
  clean-generic:
@@ -235,8 +306,8 @@ diff -urNad libsbml-2.3.5~/config/makefile-common-actions.mk libsbml-2.3.5/confi
  clean-libtool:
  	-rm -rf .libs _libs
 diff -urNad libsbml-2.3.5~/config/makefile-common-vars.mk.in libsbml-2.3.5/config/makefile-common-vars.mk.in
---- libsbml-2.3.5~/config/makefile-common-vars.mk.in	2008-06-25 16:05:27.767275542 +0900
-+++ libsbml-2.3.5/config/makefile-common-vars.mk.in	2008-06-25 16:05:36.000000000 +0900
+--- libsbml-2.3.5~/config/makefile-common-vars.mk.in	2008-07-18 18:54:59.090980534 +0900
++++ libsbml-2.3.5/config/makefile-common-vars.mk.in	2008-07-18 18:55:01.000000000 +0900
 @@ -149,7 +149,7 @@
  SWIGFLAGS         = @SWIGFLAGS@
  
@@ -269,189 +340,9 @@ diff -urNad libsbml-2.3.5~/config/makefile-common-vars.mk.in libsbml-2.3.5/confi
  SHELL             = @SHELL@
  
  
-diff -urNad libsbml-2.3.5~/config/perl.m4.rej libsbml-2.3.5/config/perl.m4.rej
---- libsbml-2.3.5~/config/perl.m4.rej	1970-01-01 09:00:00.000000000 +0900
-+++ libsbml-2.3.5/config/perl.m4.rej	2008-06-25 16:05:36.000000000 +0900
-@@ -0,0 +1,92 @@
-+***************
-+*** 0 ****
-+--- 1,89 ----
-++ dnl
-++ dnl Filename    : perl.m4
-++ dnl Description : Autoconf macro to check for existence of Perl
-++ dnl Author(s)   : Mike Hucka
-++ dnl Organization: SBML Team
-++ dnl Created     : 2005-05-01
-++ dnl Revision    : $Id: perl.m4,v 1.1 2005/05/02 02:25:23 mhucka Exp $
-++ dnl Source      : $Source: /cvsroot/sbml/libsbml/config/perl.m4,v $
-++ dnl
-++ dnl Copyright 2005 California Institute of Technology and
-++ dnl Japan Science and Technology Corporation.
-++ dnl
-++ dnl This library is free software; you can redistribute it and/or modify it
-++ dnl under the terms of the GNU Lesser General Public License as published
-++ dnl by the Free Software Foundation; either version 2.1 of the License, or
-++ dnl any later version.
-++ dnl
-++ dnl This library is distributed in the hope that it will be useful, but
-++ dnl WITHOUT ANY WARRANTY, WITHOUT EVEN THE IMPLIED WARRANTY OF
-++ dnl MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE.  The software and
-++ dnl documentation provided hereunder is on an "as is" basis, and the
-++ dnl California Institute of Technology and Japan Science and Technology
-++ dnl Corporation have no obligations to provide maintenance, support,
-++ dnl updates, enhancements or modifications.  In no event shall the
-++ dnl California Institute of Technology or the Japan Science and Technology
-++ dnl Corporation be liable to any party for direct, indirect, special,
-++ dnl incidental or consequential damages, including lost profits, arising
-++ dnl out of the use of this software and its documentation, even if the
-++ dnl California Institute of Technology and/or Japan Science and Technology
-++ dnl Corporation have been advised of the possibility of such damage.  See
-++ dnl the GNU Lesser General Public License for more details.
-++ dnl
-++ dnl You should have received a copy of the GNU Lesser General Public License
-++ dnl along with this library; if not, write to the Free Software Foundation,
-++ dnl Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA.
-++ dnl
-++ dnl The original code contained here was initially developed by:
-++ dnl
-++ dnl     Michael Hucka
-++ dnl     SBML Team
-++ dnl     Control and Dynamical Systems, MC 107-81
-++ dnl     California Institute of Technology
-++ dnl     Pasadena, CA, 91125, USA
-++ dnl
-++ dnl     http://www.sbml.org
-++ dnl     mailto:sbml-team@caltech.edu
-++ dnl
-++ dnl Contributor(s):
-++ dnl
-++ 
-++ dnl
-++ dnl Check --with-perl[=PREFIX]
-++ dnl
-++ 
-++ AC_DEFUN([CONFIG_PROG_PERL],
-++ [
-++   AC_ARG_VAR([PERL])
-++ 
-++   AC_ARG_WITH(perl,
-++               AC_HELP_STRING([--with-perl=PREFIX],
-++                              [Generate Perl interface library [[default=no]]]),
-++ 	      [with_perl=$withval],
-++ 	      [with_perl=no])
-++ 
-++   if test $with_perl != no; then
-++ 
-++     dnl Find a perl executable.
-++ 
-++     if test $with_perl != yes; then
-++       AC_PATH_PROG([PERL], [perl], [$with_perl/bin/perl],
-++                      [no-perl-found], [$with_perl/bin])
-++     else
-++       AC_PATH_PROG([PERL], [perl])
-++     fi
-++ 
-++     AC_DEFINE([USE_PERL], 1, [Define to 1 to use Perl])
-++     AC_SUBST(USE_PERL, 1)
-++ 
-++     AC_SUBST(PERL_CPPFLAGS)
-++     AC_SUBST(PERL_LDFLAGS)
-++     AC_SUBST(PERL_LIBS)
-++ 
-++   fi
-++ 
-++   dnl We record the USE_XXX flag, for later testing in Makefiles.
-++ 
-++   LIBSBML_OPTIONS="$LIBSBML_OPTIONS USE_PERL"
-++ 
-++ ])
-diff -urNad libsbml-2.3.5~/config/runldpath.m4.rej libsbml-2.3.5/config/runldpath.m4.rej
---- libsbml-2.3.5~/config/runldpath.m4.rej	1970-01-01 09:00:00.000000000 +0900
-+++ libsbml-2.3.5/config/runldpath.m4.rej	2008-06-25 16:05:36.000000000 +0900
-@@ -0,0 +1,80 @@
-+***************
-+*** 0 ****
-+--- 1,77 ----
-++ dnl
-++ dnl Filename    : runldpath.m4
-++ dnl Description : Autoconf macro to set special variable RUN_LDPATH
-++ dnl Author(s)   : Mike Hucka
-++ dnl Created     : 2005-04-30
-++ dnl Revision    : $Id: runldpath.m4,v 1.2 2005/05/01 22:25:56 mhucka Exp $
-++ dnl Source      : $Source: /cvsroot/sbml/libsbml/config/runldpath.m4,v $
-++ dnl
-++ dnl Copyright 2005 California Institute of Technology
-++ dnl
-++ dnl This library is free software; you can redistribute it and/or modify it
-++ dnl under the terms of the GNU Lesser General Public License as published
-++ dnl by the Free Software Foundation; either version 2.1 of the License, or
-++ dnl any later version.
-++ dnl
-++ dnl This library is distributed in the hope that it will be useful, but
-++ dnl WITHOUT ANY WARRANTY, WITHOUT EVEN THE IMPLIED WARRANTY OF
-++ dnl MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE.  The software and
-++ dnl documentation provided hereunder is on an "as is" basis, and the
-++ dnl California Institute of Technology and Japan Science and Technology
-++ dnl Corporation have no obligations to provide maintenance, support,
-++ dnl updates, enhancements or modifications.  In no event shall the
-++ dnl California Institute of Technology or the Japan Science and Technology
-++ dnl Corporation be liable to any party for direct, indirect, special,
-++ dnl incidental or consequential damages, including lost profits, arising
-++ dnl out of the use of this software and its documentation, even if the
-++ dnl California Institute of Technology and/or Japan Science and Technology
-++ dnl Corporation have been advised of the possibility of such damage.  See
-++ dnl the GNU Lesser General Public License for more details.
-++ dnl
-++ dnl You should have received a copy of the GNU Lesser General Public License
-++ dnl along with this library; if not, write to the Free Software Foundation,
-++ dnl Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA.
-++ dnl
-++ dnl The original code contained here was initially developed by:
-++ dnl
-++ dnl     Mike Hucka
-++ dnl     The SBML Team
-++ dnl     Control and Dynamical Systems, MC 107-81
-++ dnl     California Institute of Technology
-++ dnl     Pasadena, CA, 91125, USA
-++ dnl
-++ dnl     http://sbml.org
-++ dnl     mailto:sbml-team@caltech.edu
-++ dnl
-++ dnl Contributor(s):
-++ 
-++ dnl CONFIG_LDPATH needs to be called from configure.ac to initialize the 
-++ dnl internal variable.  It needs to be called fairly early.
-++ 
-++ AC_DEFUN([CONFIG_LDPATH],
-++ [
-++   AC_DEFINE([RUN_LDPATH])
-++ 
-++   dnl The initial value is the user's LD_LIBRARY_PATH or DYLD_LIBRARY_PATH
-++ 
-++   case $host in
-++   *darwin*) 
-++     RUN_LDPATH="$DYLD_LIBRARY_PATH"
-++     ;;
-++   *)
-++     RUN_LDPATH="$LD_LIBRARY_PATH"
-++     ;;
-++   esac
-++ 
-++   AC_SUBST(RUN_LDPATH)
-++ ])
-++ 
-++ 
-++ dnl CONFIG_ADD_LDPATH(path) adds "path" to list of paths used to set
-++ dnl LD_LIBRARY_PATH.
-++ 
-++ AC_DEFUN([CONFIG_ADD_LDPATH],
-++ [
-++   RUN_LDPATH="$RUN_LDPATH:$1"
-++ ])
-++ 
 diff -urNad libsbml-2.3.5~/configure.ac libsbml-2.3.5/configure.ac
---- libsbml-2.3.5~/configure.ac	2008-06-25 16:05:27.767275542 +0900
-+++ libsbml-2.3.5/configure.ac	2008-06-25 16:05:36.000000000 +0900
+--- libsbml-2.3.5~/configure.ac	2008-07-18 18:54:59.090980534 +0900
++++ libsbml-2.3.5/configure.ac	2008-07-18 18:55:01.000000000 +0900
 @@ -61,7 +61,6 @@
  fi
  
@@ -496,9 +387,17 @@ diff -urNad libsbml-2.3.5~/configure.ac libsbml-2.3.5/configure.ac
  
  dnl ---------------------------------------------------------------------------
  dnl Checks for libraries.
+@@ -239,6 +236,7 @@
+ dnl Output
+ dnl ---------------------------------------------------------------------------
+ 
++AC_CONFIG_FILES([config/lt_link_helper.sh], [chmod a+x config/lt_link_helper.sh])
+ AC_CONFIG_FILES([config/makefile-common-vars.mk])
+ AC_CONFIG_FILES([./Makefile])
+ 
 diff -urNad libsbml-2.3.5~/install-sh libsbml-2.3.5/install-sh
 --- libsbml-2.3.5~/install-sh	1970-01-01 09:00:00.000000000 +0900
-+++ libsbml-2.3.5/install-sh	2008-06-25 16:05:36.000000000 +0900
++++ libsbml-2.3.5/install-sh	2008-07-18 18:55:01.000000000 +0900
 @@ -0,0 +1,276 @@
 +#!/bin/sh
 +#
@@ -778,7 +677,7 @@ diff -urNad libsbml-2.3.5~/install-sh libsbml-2.3.5/install-sh
 +}
 diff -urNad libsbml-2.3.5~/mkinstalldirs libsbml-2.3.5/mkinstalldirs
 --- libsbml-2.3.5~/mkinstalldirs	1970-01-01 09:00:00.000000000 +0900
-+++ libsbml-2.3.5/mkinstalldirs	2008-06-25 16:05:36.000000000 +0900
++++ libsbml-2.3.5/mkinstalldirs	2008-07-18 18:55:01.000000000 +0900
 @@ -0,0 +1,111 @@
 +#! /bin/sh
 +# mkinstalldirs --- make directory hierarchy
@@ -892,8 +791,8 @@ diff -urNad libsbml-2.3.5~/mkinstalldirs libsbml-2.3.5/mkinstalldirs
 +# End:
 +# mkinstalldirs ends here
 diff -urNad libsbml-2.3.5~/src/bindings/java/Makefile.in libsbml-2.3.5/src/bindings/java/Makefile.in
---- libsbml-2.3.5~/src/bindings/java/Makefile.in	2008-06-25 16:05:27.767275542 +0900
-+++ libsbml-2.3.5/src/bindings/java/Makefile.in	2008-06-25 16:05:36.000000000 +0900
+--- libsbml-2.3.5~/src/bindings/java/Makefile.in	2008-07-18 18:54:59.090980534 +0900
++++ libsbml-2.3.5/src/bindings/java/Makefile.in	2008-07-18 18:55:01.000000000 +0900
 @@ -99,7 +99,7 @@
  
  extra_LDFLAGS  = $(JAVA_LDFLAGS)
@@ -915,7 +814,7 @@ diff -urNad libsbml-2.3.5~/src/bindings/java/Makefile.in libsbml-2.3.5/src/bindi
  
  # The default action is to remake everything.
  
-@@ -329,9 +329,19 @@
+@@ -329,9 +329,17 @@
  # -----------------------------------------------------------------------------
  
  install: $(libraries)
@@ -924,8 +823,6 @@ diff -urNad libsbml-2.3.5~/src/bindings/java/Makefile.in libsbml-2.3.5/src/bindi
 -	  $(INSTALL) $$lib $(DESTDIR)$(LIBDIR); \
 +	list='$(libraries)'; for lib in $$list; do \
 +	  if echo $$lib | grep '\.$(JNIEXT)$$' >/dev/null; then \
-+	    $(LIBTOOL) --mode=install $(INSTALL_SH) \
-+	    `echo $$lib | sed -e 's/\.$(JNIEXT)$$/\.la/'` $(abspath @top_srcdir@/$(thisdir))/$$lib && \
 +		$(MKINSTALLDIRS) $(DESTDIR)$(LIBDIR)/jni; \
 +	    $(INSTALL_SH) $$lib $(DESTDIR)$(LIBDIR)/jni; \
 +	  elif echo $$lib | grep '\.jar$$' >/dev/null; then \
@@ -938,9 +835,35 @@ diff -urNad libsbml-2.3.5~/src/bindings/java/Makefile.in libsbml-2.3.5/src/bindi
  	done;
  
  uninstall:
+diff -urNad libsbml-2.3.5~/src/bindings/perl/Makefile.PL.in libsbml-2.3.5/src/bindings/perl/Makefile.PL.in
+--- libsbml-2.3.5~/src/bindings/perl/Makefile.PL.in	2008-07-18 18:54:59.090980534 +0900
++++ libsbml-2.3.5/src/bindings/perl/Makefile.PL.in	2008-07-18 18:55:01.000000000 +0900
+@@ -53,7 +53,7 @@
+ 	      CC          => "@CXX@",
+ 	      CCFLAGS     => "@PERL_CPPFLAGS@",
+               INC         => "-I../swig -I../..",
+-              MYEXTLIB    => "../../libsbml.a",
++              MYEXTLIB    => "../../libsbml.la",
+               macro       => {USE_SWIG => q[@USE_SWIG@]},
+               OBJECT      => "LibSBML_wrap.o",
+               AUTHOR      => "Christoph Flamm <xtof@tbi.univie.ac.at>",
+diff -urNad libsbml-2.3.5~/src/bindings/perl/Makefile.in libsbml-2.3.5/src/bindings/perl/Makefile.in
+--- libsbml-2.3.5~/src/bindings/perl/Makefile.in	2008-07-18 18:55:00.591065727 +0900
++++ libsbml-2.3.5/src/bindings/perl/Makefile.in	2008-07-18 18:55:01.000000000 +0900
+@@ -135,7 +135,9 @@
+ 	@ echo "Reconfigure --with-perl in order to build the perl-bindings"
+ 	exit 1
+ else
+-	$(PERL) Makefile.PL $(if $(LIB),LIB=$(LIB),)
++	$(PERL) Makefile.PL $(if $(LIB),LIB=$(LIB),) \
++	  CC="$(LIBTOOL) --mode=compile $(CXX)" \
++	  LD="$(TOP_SRCDIR)/config/lt_link_helper.sh $(CXX) --libdir $(LIBDIR)"	
+ endif
+ 
+ Makefile.PL: Makefile.PL.in $(TOP_SRCDIR)/configure \
 diff -urNad libsbml-2.3.5~/src/bindings/python/Makefile.in libsbml-2.3.5/src/bindings/python/Makefile.in
---- libsbml-2.3.5~/src/bindings/python/Makefile.in	2008-06-25 16:05:27.767275542 +0900
-+++ libsbml-2.3.5/src/bindings/python/Makefile.in	2008-06-25 16:05:36.000000000 +0900
+--- libsbml-2.3.5~/src/bindings/python/Makefile.in	2008-07-18 18:54:59.090980534 +0900
++++ libsbml-2.3.5/src/bindings/python/Makefile.in	2008-07-18 18:55:01.000000000 +0900
 @@ -102,7 +102,7 @@
  endif
  
@@ -962,27 +885,18 @@ diff -urNad libsbml-2.3.5~/src/bindings/python/Makefile.in libsbml-2.3.5/src/bin
  test_objfiles = $(objfiles)
  
  # The default action is to remake everything.
-@@ -276,14 +276,15 @@
+@@ -276,7 +276,7 @@
  # -----------------------------------------------------------------------------
  
  install: setup.py create-build-dir
--	$(PYTHON) setup.py install --skip-build --prefix=$(prefix)
-+	$(PYTHON) setup.py install --skip-build --prefix=$(DESTDIR)$(prefix)
+-	$(python) setup.py install --skip-build --prefix=$(prefix)
++	$(python) setup.py install --skip-build --prefix=$(destdir)$(prefix)
  
  installcheck:
  
- create-build-dir: $(libraries)
- 	mkdir -p build build/libsbml
- 	echo "libsbml" > build/libsbml.pth
--	cp $(libraries)  build
-+	$(LIBTOOL) --mode=install cp $(libraries:.$(SHAREDLIBEXT)=.la) $(abspath .)
-+	cp $(libraries) build
- 	cp libsbml.py    build/libsbml
- 
- uninstall: setup.py
 diff -urNad libsbml-2.3.5~/src/sbml/Makefile.in libsbml-2.3.5/src/sbml/Makefile.in
---- libsbml-2.3.5~/src/sbml/Makefile.in	2008-06-25 16:05:27.767275542 +0900
-+++ libsbml-2.3.5/src/sbml/Makefile.in	2008-06-25 16:05:36.000000000 +0900
+--- libsbml-2.3.5~/src/sbml/Makefile.in	2008-07-18 18:54:59.090980534 +0900
++++ libsbml-2.3.5/src/sbml/Makefile.in	2008-07-18 18:55:01.000000000 +0900
 @@ -196,7 +196,7 @@
  
  # The libraries are actually placed in the parent directory.

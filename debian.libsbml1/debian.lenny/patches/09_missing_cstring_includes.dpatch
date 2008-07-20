@@ -1,0 +1,176 @@
+#! /bin/sh /usr/share/dpatch/dpatch-run
+## 09_missing_cstring_includes.dpatch by  <root@dynein>
+##
+## All lines beginning with `## DP:' are a description of the patch.
+## DP: No description.
+
+@DPATCH@
+
+diff -ur -x config.log -x '*.Po' libsbml-2.3.5.orig/src/sbml/Compartment.cpp libsbml-2.3.5/src/sbml/Compartment.cpp
+--- libsbml-2.3.5.orig/src/sbml/Compartment.cpp	2008-07-19 23:06:53.000000000 +0000
++++ libsbml-2.3.5/src/sbml/Compartment.cpp	2008-07-19 23:09:58.000000000 +0000
+@@ -49,6 +49,8 @@
+  */
+ 
+ 
++#include <cstring>
++
+ #include "util/util.h"
+ 
+ #include "SBMLVisitor.h"
+@@ -937,7 +939,7 @@
+ 
+   if (sid != NULL && Compartment_isSetId(c))
+   {
+-    result = strcmp(sid, Compartment_getId(c));
++    result = std::strcmp(sid, Compartment_getId(c));
+   }
+ 
+   return result;
+diff -ur -x config.log -x '*.Po' libsbml-2.3.5.orig/src/sbml/Event.cpp libsbml-2.3.5/src/sbml/Event.cpp
+--- libsbml-2.3.5.orig/src/sbml/Event.cpp	2008-07-19 23:06:53.000000000 +0000
++++ libsbml-2.3.5/src/sbml/Event.cpp	2008-07-19 23:09:55.000000000 +0000
+@@ -49,6 +49,8 @@
+  */
+ 
+ 
++#include <cstring>
++
+ #include "math/FormulaParser.h"
+ #include "math/ASTNode.h"
+ 
+@@ -790,7 +792,7 @@
+ 
+   if (sid != NULL && Event_isSetId(e))
+   {
+-    result = strcmp(sid, Event_getId(e));
++    result = std::strcmp(sid, Event_getId(e));
+   }
+ 
+   return result;
+diff -ur -x config.log -x '*.Po' libsbml-2.3.5.orig/src/sbml/FunctionDefinition.cpp libsbml-2.3.5/src/sbml/FunctionDefinition.cpp
+--- libsbml-2.3.5.orig/src/sbml/FunctionDefinition.cpp	2008-07-19 23:06:53.000000000 +0000
++++ libsbml-2.3.5/src/sbml/FunctionDefinition.cpp	2008-07-19 23:09:51.000000000 +0000
+@@ -49,6 +49,8 @@
+  */
+ 
+ 
++#include <cstring>
++
+ #include "math/FormulaParser.h"
+ #include "math/ASTNode.h"
+ 
+@@ -429,7 +431,7 @@
+ 
+   if (sid != NULL && FunctionDefinition_isSetId(fd))
+   {
+-    result = strcmp(sid, FunctionDefinition_getId(fd));
++    result = std::strcmp(sid, FunctionDefinition_getId(fd));
+   }
+ 
+   return result;
+diff -ur -x config.log -x '*.Po' libsbml-2.3.5.orig/src/sbml/Parameter.cpp libsbml-2.3.5/src/sbml/Parameter.cpp
+--- libsbml-2.3.5.orig/src/sbml/Parameter.cpp	2008-07-19 23:06:53.000000000 +0000
++++ libsbml-2.3.5/src/sbml/Parameter.cpp	2008-07-19 23:10:22.000000000 +0000
+@@ -49,6 +49,8 @@
+  */
+ 
+ 
++#include <cstring>
++
+ #include "util/util.h"
+ #include "SBMLVisitor.h"
+ 
+@@ -689,7 +691,7 @@
+ 
+   if (sid != NULL && Parameter_isSetId(p))
+   {
+-    result = strcmp(sid, Parameter_getId(p));
++    result = std::strcmp(sid, Parameter_getId(p));
+   }
+ 
+   return result;
+diff -ur -x config.log -x '*.Po' libsbml-2.3.5.orig/src/sbml/Reaction.cpp libsbml-2.3.5/src/sbml/Reaction.cpp
+--- libsbml-2.3.5.orig/src/sbml/Reaction.cpp	2008-07-19 23:06:53.000000000 +0000
++++ libsbml-2.3.5/src/sbml/Reaction.cpp	2008-07-19 23:10:44.000000000 +0000
+@@ -49,6 +49,8 @@
+  */
+ 
+ 
++#include <cstring>
++
+ #include "SBMLVisitor.h"
+ #include "SpeciesReference.h"
+ #include "ModifierSpeciesReference.h"
+@@ -1151,7 +1153,7 @@
+ 
+   if (sid != NULL && Reaction_isSetId(r))
+   {
+-    result = strcmp(sid, Reaction_getId(r));
++    result = std::strcmp(sid, Reaction_getId(r));
+   }
+ 
+   return result;
+diff -ur -x config.log -x '*.Po' libsbml-2.3.5.orig/src/sbml/SimpleSpeciesReference.cpp libsbml-2.3.5/src/sbml/SimpleSpeciesReference.cpp
+--- libsbml-2.3.5.orig/src/sbml/SimpleSpeciesReference.cpp	2008-07-19 23:06:53.000000000 +0000
++++ libsbml-2.3.5/src/sbml/SimpleSpeciesReference.cpp	2008-07-19 23:11:16.000000000 +0000
+@@ -49,6 +49,8 @@
+  */
+ 
+ 
++#include <cstring>
++
+ #include "util/util.h"
+ #include "SBMLVisitor.h"
+ 
+@@ -276,7 +278,7 @@
+ 
+   if (sid != NULL && SimpleSpeciesReference_isSetSpecies(ssr))
+   {
+-    result = strcmp(sid, SimpleSpeciesReference_getSpecies(ssr));
++    result = std::strcmp(sid, SimpleSpeciesReference_getSpecies(ssr));
+   }
+ 
+   return result;
+diff -ur -x config.log -x '*.Po' libsbml-2.3.5.orig/src/sbml/Species.cpp libsbml-2.3.5/src/sbml/Species.cpp
+--- libsbml-2.3.5.orig/src/sbml/Species.cpp	2008-07-19 23:06:53.000000000 +0000
++++ libsbml-2.3.5/src/sbml/Species.cpp	2008-07-19 23:11:32.000000000 +0000
+@@ -49,6 +49,8 @@
+  */
+ 
+ 
++#include <cstring>
++
+ #include "util/util.h"
+ #include "SBMLVisitor.h"
+ 
+@@ -1247,7 +1249,7 @@
+ 
+   if (sid != NULL && Species_isSetId(s))
+   {
+-    result = strcmp(sid, Species_getId(s));
++    result = std::strcmp(sid, Species_getId(s));
+   }
+ 
+   return result;
+diff -ur -x config.log -x '*.Po' libsbml-2.3.5.orig/src/sbml/UnitDefinition.cpp libsbml-2.3.5/src/sbml/UnitDefinition.cpp
+--- libsbml-2.3.5.orig/src/sbml/UnitDefinition.cpp	2008-07-19 23:06:53.000000000 +0000
++++ libsbml-2.3.5/src/sbml/UnitDefinition.cpp	2008-07-19 23:11:50.000000000 +0000
+@@ -49,6 +49,8 @@
+  */
+ 
+ 
++#include <cstring>
++
+ #include "util/util.h"
+ 
+ #include "SBMLVisitor.h"
+@@ -709,7 +711,7 @@
+ 
+   if (sid != NULL && UnitDefinition_isSetId(ud))
+   {
+-    result = strcmp(sid, UnitDefinition_getId(ud));
++    result = std::strcmp(sid, UnitDefinition_getId(ud));
+   }
+ 
+   return result;
