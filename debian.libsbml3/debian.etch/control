@@ -191,7 +191,7 @@ Package: libsbml3-cil
 Section: contrib/libs
 Depends: ${shlibs:Depends}, ${misc:Depends}, ${cli:Depends}
 Architecture: any
-Description: System Biology Markup Language Library -- Octave binding
+Description: System Biology Markup Language Library -- CLR binding
  LibSBML is a library designed to help you read, write, manipulate, 
  translate, and validate SBML files and data streams. It is not an 
  application itself (though it does come with many example programs), 
@@ -209,7 +209,7 @@ Description: System Biology Markup Language Library -- Octave binding
  The LibSBML code is very portable and is supported on Linux, Windows 
  (native), and Mac OS X.
  .
- This package contains the CIL binding of LibSBML.
+ This package contains the CLR binding of LibSBML.
 
 Package: libsbml3-doc
 Section: devel
