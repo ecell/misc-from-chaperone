@@ -1,0 +1,134 @@
+#! /bin/sh /usr/share/dpatch/dpatch-run
+## 08_pkgconfig_file_gen.dpatch by  <moriyoshi@dynein>
+##
+## All lines beginning with `## DP:' are a description of the patch.
+## DP: No description.
+
+@DPATCH@
+diff -urNad libsbml-3.2.0~/Makefile.in libsbml-3.2.0/Makefile.in
+--- libsbml-3.2.0~/Makefile.in	2008-09-02 04:03:14.000000000 +0900
++++ libsbml-3.2.0/Makefile.in	2008-09-02 04:03:29.000000000 +0900
+@@ -211,14 +211,15 @@
+ # makefile-common-actions.mk.
+ 
+ extra_distclean = config.status config.cache config.log autom4te.cache \
+-	src/common/config.h src/common/stamp-h1 config/lt_link_helper.sh
++	src/common/config.h src/common/stamp-h1 config/lt_link_helper.sh \
++	libsbml.pc libsbml-cil.pc
+ 
+ # It's safer to remove and recreate the copy of the include files (in the
+ # 'include' directory) after a make clean.  Previously we did it in a make
+ # distclean only, but I've run into situations where the copy didn't get
+ # updated.  This is a bit of a sledgehammer, but it's not too bad.
+ 
+-extra_clean = include libsbml.pc
++extra_clean = include
+ 
+ 
+ # -----------------------------------------------------------------------------
+@@ -229,7 +230,7 @@
+ # of the form `foo-recursive' to run 'make foo' in directories defined in
+ # variable `subdirs'.
+ 
+-all: configure Makefile include all-recursive libsbml.pc
++all: configure Makefile include all-recursive
+ 
+ docs:;
+ ifneq "$(MAKEFLAGS)" ""
+@@ -261,46 +262,6 @@
+ 
+ base-libs = -lsbml -lstdc++ -lm
+ 
+-COMPRESS_CPFLAGS = ${ZLIB_CPPFLAGS} ${BZ2_CPPFLAGS} 
+-COMPRESS_LDFLAGS = ${ZLIB_LDFLAGS} ${BZ2_LDFLAGS}
+-COMPRESS_LIBS = ${ZLIB_LIBS} ${BZ2_LIBS}
+-
+-XML_CPFLAGS = ${XERCES_CPPFLAGS} ${EXPAT_CPPFLAGS} ${LIBXML_CPPFLAGS}
+-XML_LDFLAGS = ${XERCES_LDFLAGS} ${EXPAT_LDFLAGS} ${LIBXML_LDFLAGS}
+-XML_LIBS = ${XERCES_LIBS} ${EXPAT_LIBS} ${LIBXML_LIBS}
+-
+-DEPENDENCY_CPPFLAGS = ${XML_CPPFLAGS} ${COMPRESS_CPPFLAGS}
+-DEPENDENCY_LIBFLAGS = ${XML_LDFLAGS} ${COMPRESS_LDFLAGS} ${XML_LIBS} ${COMPRESS_LIBS}
+-
+-
+-libsbml.pc: Makefile
+-	@rm -f libsbml.pc
+-	@echo "Name: @PACKAGE_NAME@"                   > libsbml.pc
+-	@echo "Description: An API library for reading/writing/manipulating SBML" >> libsbml.pc
+-	@echo "URL: http://sbml.org/software/libsbml" >> libsbml.pc
+-	@echo "Version: @PACKAGE_VERSION@"            >> libsbml.pc
+-	@echo ""                                      >> libsbml.pc
+-	@echo "prefix=@prefix@"                       >> libsbml.pc
+-	@echo "exec_prefix=@exec_prefix@"             >> libsbml.pc
+-	@echo "libdir=@libdir@"                       >> libsbml.pc
+-	@echo "includedir=@includedir@"               >> libsbml.pc
+-	@echo ""                                      >> libsbml.pc
+-ifdef USE_XERCES
+-	@echo "Libs: -L\$${libdir} ${DEPENDENCY_LIBFLAGS} ${base-libs}" >> libsbml.pc
+-	@echo "Cflags: -I\$${includedir} ${DEPENDENCY_CPPFLAGS}" >> libsbml.pc
+-	@echo "Conflicts: xerces-c = 2.6.0" >> libsbml.pc
+-endif
+-ifdef USE_EXPAT
+-	@echo "Libs: -L\$${libdir} ${DEPENDENCY_LIBFLAGS} ${base-libs}" >> libsbml.pc
+-	@echo "Cflags: -I\$${includedir} ${DEPENDENCY_CPPFLAGS}"  >> libsbml.pc
+-endif
+-ifdef USE_LIBXML
+-	@echo "Libs: -L\$${libdir} ${DEPENDENCY_LIBFLAGS} ${base-libs}" >> libsbml.pc
+-	@echo "Cflags: -I\$${includedir} ${DEPENDENCY_CPPFLAGS}"        >> libsbml.pc
+-	@echo "Requires: libxml-2.0 >= 2.6.22" >> libsbml.pc
+-endif
+-
+-
+ # -----------------------------------------------------------------------------
+ # Installation.
+ # -----------------------------------------------------------------------------
+@@ -322,7 +283,9 @@
+ endif
+ 
+ install-pc: libsbml.pc
++	$(MKINSTALLDIRS) $(DESTDIR)$(LIBDIR)/pkgconfig
+ 	$(INSTALL_SH) libsbml.pc -m 0644 "$(DESTDIR)$(LIBDIR)/pkgconfig/libsbml.pc"
++	$(INSTALL_SH) libsbml-cil.pc -m 0644 "$(DESTDIR)$(LIBDIR)/pkgconfig/libsbml-cil.pc"
+ 
+ uninstall: uninstall-recursive uninstall-libsbml-pc
+ 	@if test -d "$(DESTDIR)$(LIBDIR)"; then \
+diff -urNad libsbml-3.2.0~/configure.ac libsbml-3.2.0/configure.ac
+--- libsbml-3.2.0~/configure.ac	2008-09-02 04:03:14.000000000 +0900
++++ libsbml-3.2.0/configure.ac	2008-09-02 04:03:15.000000000 +0900
+@@ -243,6 +243,8 @@
+ AC_CONFIG_FILES([config/mkoctfile_wrapper.sh], [chmod a+x config/mkoctfile_wrapper.sh])
+ AC_CONFIG_FILES([./Makefile])
+ 
++AC_CONFIG_FILES([./libsbml.pc ./libsbml-cil.pc])
++
+ AC_CONFIG_FILES([src/Makefile])
+ 
+ AC_CONFIG_FILES([src/common/Makefile])
+diff -urNad libsbml-3.2.0~/libsbml-cil.pc.in libsbml-3.2.0/libsbml-cil.pc.in
+--- libsbml-3.2.0~/libsbml-cil.pc.in	1970-01-01 09:00:00.000000000 +0900
++++ libsbml-3.2.0/libsbml-cil.pc.in	2008-09-02 04:03:15.000000000 +0900
+@@ -0,0 +1,9 @@
++prefix=@prefix@
++exec_prefix=@exec_prefix@
++libdir=@libdir@
++
++Name: @PACKAGE_NAME@-cil
++Description: CLR binding for libSBML
++URL: http://sbml.org/software/libsbml
++Version: @PACKAGE_VERSION@
++Libs: -r:${libdir}/cli/libsbml-3.0/libsbmlcsP.dll
+diff -urNad libsbml-3.2.0~/libsbml.pc.in libsbml-3.2.0/libsbml.pc.in
+--- libsbml-3.2.0~/libsbml.pc.in	1970-01-01 09:00:00.000000000 +0900
++++ libsbml-3.2.0/libsbml.pc.in	2008-09-02 04:05:13.000000000 +0900
+@@ -0,0 +1,11 @@
++prefix=@prefix@
++exec_prefix=@exec_prefix@
++libdir=@libdir@
++includedir=@includedir@
++
++Name: @PACKAGE_NAME@
++Description: An API library for reading/writing/manipulating SBML
++URL: http://sbml.org/software/libsbml
++Version: @PACKAGE_VERSION@
++Libs: @XERCES_LDFLAGS@ @EXPAT_LDFLAGS@ @LIBXML_LDFLAGS@ @ZLIB_LDFLAGS@ @BZ2_LDFLAGS@ @ZLIB_LIBS@ @BZ2_LIBS@ @XERCES_LIBS@ @EXPAT_LIBS@ @LIBXML_LIBS@ -lsbml
++Cflags: -I${includedir} @ZLIB_CPPFLAGS@ @BZ2_CPPFLAGS@ @XERCES_CPPFLAGS@ @EXPAT_CPPFLAGS@ @LIBXML_CPPFLAGS@

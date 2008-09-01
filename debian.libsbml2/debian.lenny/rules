@@ -111,8 +111,7 @@ clean: distclean unpatch
 	  src/bindings/octave/install_Win32.m \
 	  src/bindings/octave/make.bat \
 	  src/bindings/octave/matlab-tags-regexp.txt \
-	  src/bindings/octave/test.xml \
-	  src/bindings/csharp/libsbmlcs.snk
+	  src/bindings/octave/test.xml
 
 install: build
 	dh_testdir
