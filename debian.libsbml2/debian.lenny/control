@@ -4,7 +4,8 @@ Maintainer: Steffen Moeller <moeller@pzr.uni-rostock.de>, Changyan Xie <panchoat
 Build-Depends: debhelper (>= 4.0.0), dpatch, bash, autoconf, automake, ruby,
  libtool (>= 1.5.0), build-essential, libxml2-dev, python-dev, ruby1.8-dev,
  libperl-dev, java-gcj-compat-dev | java-sdk, octave2.9-headers, fastjar,
- python-support (>= 0.3), doxygen, graphviz
+ python-support (>= 0.3), doxygen, graphviz, libz-dev, libbz2-dev,
+ cli-common-dev, cli-runtime, mono-mcs
 Standards-Version: 3.7.2
 Section: contrib/science
 XS-Vcs-Browser: http://svn.debian.org/wsvn/debian-med/trunk/packages/libsbml/trunk/
@@ -185,6 +186,30 @@ Description: System Biology Markup Language Library -- Octave binding
  (native), and Mac OS X.
  .
  This package contains the Octave binding of LibSBML.
+
+Package: libsbml3-cil
+Section: contrib/libs
+Depends: ${shlibs:Depends}, ${misc:Depends}, ${cli:Depends}
+Architecture: any
+Description: System Biology Markup Language Library -- Octave binding
+ LibSBML is a library designed to help you read, write, manipulate, 
+ translate, and validate SBML files and data streams. It is not an 
+ application itself (though it does come with many example programs), 
+ but rather a library you can embed in your own applications.
+ .
+ LibSBML is written in ISO C and C++ but as a library it may be 
+ used from all the programming languages listed to the left. In fact, 
+ we strive to adhere to the natural idioms of each particular language
+ to make the libSBML programming experience seamless. For example, SBML
+ <listOf> elements behave like lists and sequences in Python, but 
+ vectors in Matlab. Also, the C and C++ interfaces are completely 
+ distinct (it's possible to program in pure C), but in C++ the C APIs 
+ may be called without sacrifcing type safety.
+ .
+ The LibSBML code is very portable and is supported on Linux, Windows 
+ (native), and Mac OS X.
+ .
+ This package contains the CIL binding of LibSBML.
 
 Package: libsbml3-doc
 Section: devel

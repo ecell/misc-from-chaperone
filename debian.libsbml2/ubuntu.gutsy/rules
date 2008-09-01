@@ -43,10 +43,10 @@ patch-stamp:
 	eval `bash /usr/share/java-common/jvm-find.sh` && javac -cp $$JAVA_HOME/lib/tools.jar -sourcepath docs/src -d docs/src docs/src/ExcludeDoclet.java
 	touch patch-stamp
 
-config.status: patch configure
+config.status: patch-stamp configure
 	dh_testdir
 	# Add here commands to configure the package.
-	CFLAGS="$(CFLAGS)" LDFLAGS="-Wl,-z,defs"
+	MONO_SHARED_DIR="$(CURDIR)" CFLAGS="$(CFLAGS)" LDFLAGS="-Wl,-z,defs" \
 	./configure --host=$(DEB_HOST_GNU_TYPE) \
 	            --build=$(DEB_BUILD_GNU_TYPE) \
 	            --prefix=/usr \
@@ -56,7 +56,9 @@ config.status: patch configure
 	            --with-python=/usr \
 	            --with-java=/usr \
 	            --with-ruby=/usr \
-	            --with-octave=/usr
+	            --with-octave=/usr \
+	            --with-csharp=/usr \
+	            --with-csharp-compiler=/usr/bin/mcs
 	touch \
 		src/bindings/java/java-files \
 		src/bindings/java/libsbml_wrap.cpp \
@@ -69,13 +71,13 @@ config.status: patch configure
 build: build-stamp build-stamp-indep
 build-stamp: config.status
 	dh_testdir
-	$(MAKE) all DESTDIR=$(CURDIR)/debian/tmp/
+	MONO_SHARED_DIR="$(CURDIR)" $(MAKE) all DESTDIR=$(CURDIR)/debian/tmp/
 	touch build-stamp
 
 build-indep: build-stamp-indep
 build-stamp-indep: config.status
 	dh_testdir
-	-$(MAKE) docs 
+	MONO_SHARED_DIR="$(CURDIR)" $(MAKE) docs 
 	touch build-stamp-indep
 
 unpatch:
@@ -109,7 +111,8 @@ clean: distclean unpatch
 	  src/bindings/octave/install_Win32.m \
 	  src/bindings/octave/make.bat \
 	  src/bindings/octave/matlab-tags-regexp.txt \
-	  src/bindings/octave/test.xml
+	  src/bindings/octave/test.xml \
+	  src/bindings/csharp/libsbmlcs.snk
 
 install: build
 	dh_testdir
@@ -117,8 +120,8 @@ install: build
 	dh_clean -k 
 	dh_installdirs
 	# Add here commands to install the package into debian/tmp
-	$(MAKE) install DESTDIR=$(CURDIR)/debian/tmp/
-	$(MAKE) install-docs DESTDIR=$(CURDIR)/debian/tmp/
+	MONO_SHARED_DIR="$(CURDIR)" $(MAKE) install DESTDIR=$(CURDIR)/debian/tmp/
+	MONO_SHARED_DIR="$(CURDIR)" $(MAKE) install-docs DESTDIR=$(CURDIR)/debian/tmp/
 
 # Build architecture-independent files here.
 binary-indep: build-indep install
@@ -140,8 +143,10 @@ binary-arch: build install
 	dh_perl
 	dh_pysupport
 	dh_makeshlibs
+	dh_makeclilibs
 	dh_installdeb
 	dh_shlibdeps
+	dh_clideps
 	dh_gencontrol
 	dh_md5sums
 	dh_builddeb

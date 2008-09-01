@@ -1,3 +1,9 @@
+libsbml (3.2.0-1) etch; urgency=low
+
+  * Upstream update.
+
+ -- Moriyoshi Koizumi <mozo@sfc.keio.ac.jp>  Sun, 24 Aug 2008 19:27:26 +0900
+
 libsbml (3.1.1-1) etch; urgency=low
 
   * Upstream update.

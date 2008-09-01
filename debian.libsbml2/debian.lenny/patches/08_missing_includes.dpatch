@@ -1,0 +1,276 @@
+#! /bin/sh /usr/share/dpatch/dpatch-run
+## 08_missing_includes.dpatch by Moriyoshi Koizumi <root@dynein>
+##
+## All lines beginning with `## DP:' are a description of the patch.
+## DP: No description.
+
+@DPATCH@
+
+diff -ur libsbml-3.1.1.orig/src/annotation/ModelHistory.cpp libsbml-3.1.1/src/annotation/ModelHistory.cpp
+--- libsbml-3.1.1.orig/src/annotation/ModelHistory.cpp	2008-07-20 00:38:14.000000000 +0000
++++ libsbml-3.1.1/src/annotation/ModelHistory.cpp	2008-07-20 02:18:47.000000000 +0000
+@@ -21,6 +21,7 @@
+  * Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA.
+  */
+ 
++#include <cstdlib>
+ 
+ #include <sbml/annotation/ModelHistory.h>
+ 
+diff -ur libsbml-3.1.1.orig/src/common/libsbml-config-unix.h libsbml-3.1.1/src/common/libsbml-config-unix.h
+--- libsbml-3.1.1.orig/src/common/libsbml-config-unix.h	2008-07-20 00:38:16.000000000 +0000
++++ libsbml-3.1.1/src/common/libsbml-config-unix.h	2008-07-20 00:43:02.000000000 +0000
+@@ -44,7 +44,7 @@
+ 
+ 
+ /* Define to 1 if you have the <check.h> header file. */
+-#define HAVE_CHECK_H 1
++/* #undef HAVE_CHECK_H */
+ 
+ /* Define to 1 if you have the `check' library (-lcheck). */
+ /* #undef HAVE_LIBCHECK */
+diff -ur libsbml-3.1.1.orig/src/sbml/Constraint.cpp libsbml-3.1.1/src/sbml/Constraint.cpp
+--- libsbml-3.1.1.orig/src/sbml/Constraint.cpp	2008-07-20 00:38:14.000000000 +0000
++++ libsbml-3.1.1/src/sbml/Constraint.cpp	2008-07-20 02:20:43.000000000 +0000
+@@ -21,6 +21,8 @@
+  * and also available online as http://sbml.org/software/libsbml/license.html
+  *----------------------------------------------------------------------- -->*/
+ 
++#include <cstring>
++
+ #include <sbml/xml/XMLNode.h>
+ #include <sbml/xml/XMLAttributes.h>
+ #include <sbml/xml/XMLInputStream.h>
+diff -ur libsbml-3.1.1.orig/src/sbml/Delay.cpp libsbml-3.1.1/src/sbml/Delay.cpp
+--- libsbml-3.1.1.orig/src/sbml/Delay.cpp	2008-07-20 00:38:14.000000000 +0000
++++ libsbml-3.1.1/src/sbml/Delay.cpp	2008-07-20 02:20:58.000000000 +0000
+@@ -21,6 +21,8 @@
+  * and also available online as http://sbml.org/software/libsbml/license.html
+  *----------------------------------------------------------------------- -->*/
+ 
++#include <cstring>
++
+ #include <sbml/xml/XMLNode.h>
+ #include <sbml/xml/XMLAttributes.h>
+ #include <sbml/xml/XMLInputStream.h>
+diff -ur libsbml-3.1.1.orig/src/sbml/EventAssignment.cpp libsbml-3.1.1/src/sbml/EventAssignment.cpp
+--- libsbml-3.1.1.orig/src/sbml/EventAssignment.cpp	2008-07-20 00:38:14.000000000 +0000
++++ libsbml-3.1.1/src/sbml/EventAssignment.cpp	2008-07-20 02:21:17.000000000 +0000
+@@ -21,6 +21,8 @@
+  * and also available online as http://sbml.org/software/libsbml/license.html
+  *----------------------------------------------------------------------- -->*/
+ 
++#include <cstring>
++
+ #include <sbml/xml/XMLNode.h>
+ #include <sbml/xml/XMLAttributes.h>
+ #include <sbml/xml/XMLInputStream.h>
+diff -ur libsbml-3.1.1.orig/src/sbml/InitialAssignment.cpp libsbml-3.1.1/src/sbml/InitialAssignment.cpp
+--- libsbml-3.1.1.orig/src/sbml/InitialAssignment.cpp	2008-07-20 00:38:14.000000000 +0000
++++ libsbml-3.1.1/src/sbml/InitialAssignment.cpp	2008-07-20 02:21:35.000000000 +0000
+@@ -21,6 +21,8 @@
+  * and also available online as http://sbml.org/software/libsbml/license.html
+  *----------------------------------------------------------------------- -->*/
+ 
++#include <cstring>
++
+ #include <sbml/xml/XMLNode.h>
+ #include <sbml/xml/XMLAttributes.h>
+ #include <sbml/xml/XMLInputStream.h>
+diff -ur libsbml-3.1.1.orig/src/sbml/KineticLaw.cpp libsbml-3.1.1/src/sbml/KineticLaw.cpp
+--- libsbml-3.1.1.orig/src/sbml/KineticLaw.cpp	2008-07-20 00:38:14.000000000 +0000
++++ libsbml-3.1.1/src/sbml/KineticLaw.cpp	2008-07-20 02:22:07.000000000 +0000
+@@ -21,6 +21,8 @@
+  * and also available online as http://sbml.org/software/libsbml/license.html
+  *----------------------------------------------------------------------- -->*/
+ 
++#include <cstring>
++
+ #include <sbml/xml/XMLNode.h>
+ #include <sbml/xml/XMLAttributes.h>
+ #include <sbml/xml/XMLInputStream.h>
+diff -ur libsbml-3.1.1.orig/src/sbml/Model.cpp libsbml-3.1.1/src/sbml/Model.cpp
+--- libsbml-3.1.1.orig/src/sbml/Model.cpp	2008-07-20 00:38:14.000000000 +0000
++++ libsbml-3.1.1/src/sbml/Model.cpp	2008-07-20 02:24:07.000000000 +0000
+@@ -21,6 +21,8 @@
+  * and also available online as http://sbml.org/software/libsbml/license.html
+  *----------------------------------------------------------------------- -->*/
+ 
++#include <cstring>
++
+ #include <sbml/xml/XMLNode.h>
+ #include <sbml/xml/XMLAttributes.h>
+ #include <sbml/xml/XMLInputStream.h>
+diff -ur libsbml-3.1.1.orig/src/sbml/Rule.cpp libsbml-3.1.1/src/sbml/Rule.cpp
+--- libsbml-3.1.1.orig/src/sbml/Rule.cpp	2008-07-20 00:38:14.000000000 +0000
++++ libsbml-3.1.1/src/sbml/Rule.cpp	2008-07-20 02:24:55.000000000 +0000
+@@ -22,6 +22,8 @@
+  * and also available online as http://sbml.org/software/libsbml/license.html
+  *----------------------------------------------------------------------- -->*/
+ 
++#include <cstring>
++
+ #include <sbml/xml/XMLNode.h>
+ #include <sbml/xml/XMLAttributes.h>
+ #include <sbml/xml/XMLInputStream.h>
+diff -ur libsbml-3.1.1.orig/src/sbml/SBMLDocument.cpp libsbml-3.1.1/src/sbml/SBMLDocument.cpp
+--- libsbml-3.1.1.orig/src/sbml/SBMLDocument.cpp	2008-07-20 00:38:14.000000000 +0000
++++ libsbml-3.1.1/src/sbml/SBMLDocument.cpp	2008-07-20 02:25:13.000000000 +0000
+@@ -22,6 +22,7 @@
+  * and also available online as http://sbml.org/software/libsbml/license.html
+  *----------------------------------------------------------------------- -->*/
+ 
++#include <cstring>
+ #include <iostream>
+ 
+ #include <sbml/xml/XMLAttributes.h>
+diff -ur libsbml-3.1.1.orig/src/sbml/SBase.cpp libsbml-3.1.1/src/sbml/SBase.cpp
+--- libsbml-3.1.1.orig/src/sbml/SBase.cpp	2008-07-20 00:38:14.000000000 +0000
++++ libsbml-3.1.1/src/sbml/SBase.cpp	2008-07-20 02:25:45.000000000 +0000
+@@ -21,6 +21,7 @@
+  * and also available online as http://sbml.org/software/libsbml/license.html
+  *----------------------------------------------------------------------- -->*/
+ 
++#include <cstring>
+ #include <sstream>
+ 
+ #include <sbml/xml/XMLError.h>
+diff -ur libsbml-3.1.1.orig/src/sbml/StoichiometryMath.cpp libsbml-3.1.1/src/sbml/StoichiometryMath.cpp
+--- libsbml-3.1.1.orig/src/sbml/StoichiometryMath.cpp	2008-07-20 00:38:14.000000000 +0000
++++ libsbml-3.1.1/src/sbml/StoichiometryMath.cpp	2008-07-20 02:26:15.000000000 +0000
+@@ -21,6 +21,8 @@
+  * and also available online as http://sbml.org/software/libsbml/license.html
+  *----------------------------------------------------------------------- -->*/
+ 
++#include <cstring>
++
+ #include <sbml/xml/XMLNode.h>
+ #include <sbml/xml/XMLAttributes.h>
+ #include <sbml/xml/XMLInputStream.h>
+diff -ur libsbml-3.1.1.orig/src/sbml/Trigger.cpp libsbml-3.1.1/src/sbml/Trigger.cpp
+--- libsbml-3.1.1.orig/src/sbml/Trigger.cpp	2008-07-20 00:38:14.000000000 +0000
++++ libsbml-3.1.1/src/sbml/Trigger.cpp	2008-07-20 02:26:30.000000000 +0000
+@@ -21,6 +21,8 @@
+  * and also available online as http://sbml.org/software/libsbml/license.html
+  *----------------------------------------------------------------------- -->*/
+ 
++#include <cstring>
++
+ #include <sbml/xml/XMLNode.h>
+ #include <sbml/xml/XMLAttributes.h>
+ #include <sbml/xml/XMLInputStream.h>
+diff -ur libsbml-3.1.1.orig/src/sbml/Unit.cpp libsbml-3.1.1/src/sbml/Unit.cpp
+--- libsbml-3.1.1.orig/src/sbml/Unit.cpp	2008-07-20 00:38:14.000000000 +0000
++++ libsbml-3.1.1/src/sbml/Unit.cpp	2008-07-20 02:26:43.000000000 +0000
+@@ -21,6 +21,8 @@
+  * and also available online as http://sbml.org/software/libsbml/license.html
+  *----------------------------------------------------------------------- -->*/
+ 
++#include <cstring>
++
+ #include <sbml/xml/XMLNode.h>
+ #include <sbml/xml/XMLAttributes.h>
+ #include <sbml/xml/XMLInputStream.h>
+diff -ur libsbml-3.1.1.orig/src/sbml/UnitDefinition.cpp libsbml-3.1.1/src/sbml/UnitDefinition.cpp
+--- libsbml-3.1.1.orig/src/sbml/UnitDefinition.cpp	2008-07-20 00:38:14.000000000 +0000
++++ libsbml-3.1.1/src/sbml/UnitDefinition.cpp	2008-07-20 02:26:58.000000000 +0000
+@@ -21,6 +21,7 @@
+  * and also available online as http://sbml.org/software/libsbml/license.html
+  *----------------------------------------------------------------------- -->*/
+ 
++#include <cstring>
+ 
+ #include <sbml/xml/XMLNode.h>
+ #include <sbml/xml/XMLAttributes.h>
+diff -ur libsbml-3.1.1.orig/src/units/UnitFormulaFormatter.cpp libsbml-3.1.1/src/units/UnitFormulaFormatter.cpp
+--- libsbml-3.1.1.orig/src/units/UnitFormulaFormatter.cpp	2008-07-20 00:38:15.000000000 +0000
++++ libsbml-3.1.1/src/units/UnitFormulaFormatter.cpp	2008-07-20 02:17:52.000000000 +0000
+@@ -23,6 +23,7 @@
+  * also available online as http://sbml.org/software/libsbml/license.html
+  *----------------------------------------------------------------------- -->*/
+ 
++#include <cstring>
+ #include <sbml/units/UnitFormulaFormatter.h>
+ 
+ 
+diff -ur libsbml-3.1.1.orig/src/validator/constraints/AssignmentCycles.cpp libsbml-3.1.1/src/validator/constraints/AssignmentCycles.cpp
+--- libsbml-3.1.1.orig/src/validator/constraints/AssignmentCycles.cpp	2008-07-20 00:38:15.000000000 +0000
++++ libsbml-3.1.1/src/validator/constraints/AssignmentCycles.cpp	2008-07-20 00:59:21.000000000 +0000
+@@ -21,7 +21,7 @@
+  * Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA.
+  */
+ 
+-
++#include <cstring>
+ 
+ #include <sbml/Model.h>
+ #include <sbml/Rule.h>
+diff -ur libsbml-3.1.1.orig/src/validator/constraints/ConsistencyConstraints.cpp libsbml-3.1.1/src/validator/constraints/ConsistencyConstraints.cpp
+--- libsbml-3.1.1.orig/src/validator/constraints/ConsistencyConstraints.cpp	2008-07-20 00:38:15.000000000 +0000
++++ libsbml-3.1.1/src/validator/constraints/ConsistencyConstraints.cpp	2008-07-20 00:57:37.000000000 +0000
+@@ -24,7 +24,7 @@
+ 
+ #ifndef AddingConstraintsToValidator
+ 
+-//#include <string>
++#include <cstring>
+ 
+ #include <sbml/SBMLTypes.h>
+ #include <sbml/SBMLTypeCodes.h>
+diff -ur libsbml-3.1.1.orig/src/validator/constraints/OverDeterminedCheck.cpp libsbml-3.1.1/src/validator/constraints/OverDeterminedCheck.cpp
+--- libsbml-3.1.1.orig/src/validator/constraints/OverDeterminedCheck.cpp	2008-07-20 00:38:15.000000000 +0000
++++ libsbml-3.1.1/src/validator/constraints/OverDeterminedCheck.cpp	2008-07-20 01:01:55.000000000 +0000
+@@ -21,6 +21,8 @@
+  * Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA.
+  */
+ 
++#include <cstring>
++
+ #include <sbml/Model.h>
+ #include <sbml/Compartment.h>
+ #include <sbml/util/List.h>
+diff -ur libsbml-3.1.1.orig/src/validator/constraints/SpeciesReactionOrRule.cpp libsbml-3.1.1/src/validator/constraints/SpeciesReactionOrRule.cpp
+--- libsbml-3.1.1.orig/src/validator/constraints/SpeciesReactionOrRule.cpp	2008-07-20 00:38:15.000000000 +0000
++++ libsbml-3.1.1/src/validator/constraints/SpeciesReactionOrRule.cpp	2008-07-20 01:02:49.000000000 +0000
+@@ -21,6 +21,8 @@
+  * Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA.
+  */
+ 
++#include <cstring>
++
+ #include <sbml/Model.h>
+ #include <sbml/Rule.h>
+ #include <sbml/Reaction.h>
+diff -ur libsbml-3.1.1.orig/src/validator/constraints/UniqueSpeciesTypesInCompartment.cpp libsbml-3.1.1/src/validator/constraints/UniqueSpeciesTypesInCompartment.cpp
+--- libsbml-3.1.1.orig/src/validator/constraints/UniqueSpeciesTypesInCompartment.cpp	2008-07-20 00:38:15.000000000 +0000
++++ libsbml-3.1.1/src/validator/constraints/UniqueSpeciesTypesInCompartment.cpp	2008-07-20 02:13:52.000000000 +0000
+@@ -21,6 +21,7 @@
+  * Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA.
+  */
+ 
++#include <cstring>
+ 
+ #include <sbml/Model.h>
+ #include <sbml/Rule.h>
+diff -ur libsbml-3.1.1.orig/src/xml/LibXMLParser.cpp libsbml-3.1.1/src/xml/LibXMLParser.cpp
+--- libsbml-3.1.1.orig/src/xml/LibXMLParser.cpp	2008-07-20 00:38:14.000000000 +0000
++++ libsbml-3.1.1/src/xml/LibXMLParser.cpp	2008-07-20 00:56:54.000000000 +0000
+@@ -22,6 +22,7 @@
+  *----------------------------------------------------------------------- -->*/
+ 
+ #include <iostream>
++#include <cstring>
+ 
+ #include <libxml/xmlerror.h>
+ 
+diff -ur libsbml-3.1.1.orig/src/xml/XMLNode.cpp libsbml-3.1.1/src/xml/XMLNode.cpp
+--- libsbml-3.1.1.orig/src/xml/XMLNode.cpp	2008-07-20 00:38:14.000000000 +0000
++++ libsbml-3.1.1/src/xml/XMLNode.cpp	2008-07-20 00:55:46.000000000 +0000
+@@ -22,6 +22,7 @@
+  *----------------------------------------------------------------------- -->*/
+ 
+ #include <sstream>
++#include <cstdlib>
+ 
+ #include <sbml/util/memory.h>
+ #include <sbml/util/util.h>
