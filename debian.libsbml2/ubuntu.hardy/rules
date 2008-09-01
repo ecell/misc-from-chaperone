@@ -40,7 +40,7 @@ patch-stamp:
 	libtoolize -c -f
 	aclocal -Iconfig
 	autoconf
-	eval `bash /usr/share/java-common/jvm-find.sh` && javac -cp $$JAVA_HOME/lib/tools.jar -sourcepath docs/src -d docs/src docs/src/ExcludeDoclet.java
+	eval `bash ./debian/jvm-find.sh` && javac -cp $$JAVA_HOME/lib/tools.jar -sourcepath docs/src -d docs/src docs/src/ExcludeDoclet.java
 	touch patch-stamp
 
 config.status: patch-stamp configure
