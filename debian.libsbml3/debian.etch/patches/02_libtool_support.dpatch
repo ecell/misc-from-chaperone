@@ -7,7 +7,7 @@
 @DPATCH@
 diff -urNad libsbml-3.2.0~/Makefile.in libsbml-3.2.0/Makefile.in
 --- libsbml-3.2.0~/Makefile.in	2008-08-17 22:50:36.000000000 +0900
-+++ libsbml-3.2.0/Makefile.in	2008-09-11 05:27:53.000000000 +0900
++++ libsbml-3.2.0/Makefile.in	2008-09-11 07:28:52.000000000 +0900
 @@ -185,11 +185,13 @@
    config/libcheck.m4                \
    config/libxml.m4                  \
@@ -27,7 +27,7 @@ diff -urNad libsbml-3.2.0~/Makefile.in libsbml-3.2.0/Makefile.in
  
  extra_distclean = config.status config.cache config.log autom4te.cache \
 -	src/common/config.h src/common/stamp-h1
-+	src/common/config.h src/common/stamp-h1 config/lt_link_helper.sh
++	src/common/config.h src/common/stamp-h1 config/lt_link_helper.sh config/mkoctfile_wrapper.sh
  
  # It's safer to remove and recreate the copy of the include files (in the
  # 'include' directory) after a make clean.  Previously we did it in a make
@@ -133,7 +133,7 @@ diff -urNad libsbml-3.2.0~/Makefile.in libsbml-3.2.0/Makefile.in
  # -----------------------------------------------------------------------------
 diff -urNad libsbml-3.2.0~/acinclude.m4 libsbml-3.2.0/acinclude.m4
 --- libsbml-3.2.0~/acinclude.m4	1970-01-01 09:00:00.000000000 +0900
-+++ libsbml-3.2.0/acinclude.m4	2008-09-11 05:27:53.000000000 +0900
++++ libsbml-3.2.0/acinclude.m4	2008-09-11 07:28:52.000000000 +0900
 @@ -0,0 +1,27 @@
 +# generated automatically by aclocal 1.9.6 -*- Autoconf -*-
 +
@@ -164,7 +164,7 @@ diff -urNad libsbml-3.2.0~/acinclude.m4 libsbml-3.2.0/acinclude.m4
 +m4_include([config/xercesc.m4])
 diff -urNad libsbml-3.2.0~/config/lt_link_helper.sh.in libsbml-3.2.0/config/lt_link_helper.sh.in
 --- libsbml-3.2.0~/config/lt_link_helper.sh.in	1970-01-01 09:00:00.000000000 +0900
-+++ libsbml-3.2.0/config/lt_link_helper.sh.in	2008-09-11 05:27:53.000000000 +0900
++++ libsbml-3.2.0/config/lt_link_helper.sh.in	2008-09-11 07:28:52.000000000 +0900
 @@ -0,0 +1,69 @@
 +#!/bin/sh
 +
@@ -236,8 +236,8 @@ diff -urNad libsbml-3.2.0~/config/lt_link_helper.sh.in libsbml-3.2.0/config/lt_l
 +    cp "${stage_dir}/${libdir}/${out_filename}${dllibext}" "${out_dir}"
 +rm -rf "${linker_tmpdir}"
 diff -urNad libsbml-3.2.0~/config/makefile-common-actions.mk libsbml-3.2.0/config/makefile-common-actions.mk
---- libsbml-3.2.0~/config/makefile-common-actions.mk	2008-09-02 04:51:32.000000000 +0900
-+++ libsbml-3.2.0/config/makefile-common-actions.mk	2008-09-02 04:51:33.000000000 +0900
+--- libsbml-3.2.0~/config/makefile-common-actions.mk	2008-06-30 11:43:36.000000000 +0900
++++ libsbml-3.2.0/config/makefile-common-actions.mk	2008-09-11 07:28:52.000000000 +0900
 @@ -40,7 +40,7 @@
  # -----------------------------------------------------------------------------
  
@@ -463,7 +463,7 @@ diff -urNad libsbml-3.2.0~/config/makefile-common-actions.mk libsbml-3.2.0/confi
  	distclean-tags distclean-libtool
 diff -urNad libsbml-3.2.0~/config/makefile-common-vars.mk.in libsbml-3.2.0/config/makefile-common-vars.mk.in
 --- libsbml-3.2.0~/config/makefile-common-vars.mk.in	2008-07-27 09:28:13.000000000 +0900
-+++ libsbml-3.2.0/config/makefile-common-vars.mk.in	2008-09-11 05:27:53.000000000 +0900
++++ libsbml-3.2.0/config/makefile-common-vars.mk.in	2008-09-11 07:28:52.000000000 +0900
 @@ -144,6 +144,9 @@
  OCTAVE            = @OCTAVE@
  MKOCTFILE         = @MKOCTFILE@
@@ -487,7 +487,7 @@ diff -urNad libsbml-3.2.0~/config/makefile-common-vars.mk.in libsbml-3.2.0/confi
  LIBSBML_VERSION_NUMERIC = @LIBSBML_VERSION_NUMERIC@
 diff -urNad libsbml-3.2.0~/config/mkoctfile_wrapper.sh.in libsbml-3.2.0/config/mkoctfile_wrapper.sh.in
 --- libsbml-3.2.0~/config/mkoctfile_wrapper.sh.in	1970-01-01 09:00:00.000000000 +0900
-+++ libsbml-3.2.0/config/mkoctfile_wrapper.sh.in	2008-09-11 05:34:25.000000000 +0900
++++ libsbml-3.2.0/config/mkoctfile_wrapper.sh.in	2008-09-11 07:28:52.000000000 +0900
 @@ -0,0 +1,17 @@
 +#!/bin/sh
 +SHAREDLIBEXT=@SHAREDLIBEXT@
@@ -508,7 +508,7 @@ diff -urNad libsbml-3.2.0~/config/mkoctfile_wrapper.sh.in libsbml-3.2.0/config/m
 +eval "exec $args"
 diff -urNad libsbml-3.2.0~/config/octave.m4 libsbml-3.2.0/config/octave.m4
 --- libsbml-3.2.0~/config/octave.m4	2008-06-30 11:43:36.000000000 +0900
-+++ libsbml-3.2.0/config/octave.m4	2008-09-11 05:27:53.000000000 +0900
++++ libsbml-3.2.0/config/octave.m4	2008-09-11 07:28:52.000000000 +0900
 @@ -42,9 +42,13 @@
                       [no-octave-found], [$with_octave/bin])
        AC_PATH_PROG([MKOCTFILE], [mkoctfile], [$with_octave/bin/mkoctfile],
@@ -551,7 +551,7 @@ diff -urNad libsbml-3.2.0~/config/octave.m4 libsbml-3.2.0/config/octave.m4
  
 diff -urNad libsbml-3.2.0~/configure.ac libsbml-3.2.0/configure.ac
 --- libsbml-3.2.0~/configure.ac	2008-08-17 02:58:40.000000000 +0900
-+++ libsbml-3.2.0/configure.ac	2008-09-11 05:27:53.000000000 +0900
++++ libsbml-3.2.0/configure.ac	2008-09-11 07:28:52.000000000 +0900
 @@ -139,13 +139,17 @@
  AC_PROG_CXX
  AC_PROG_CC
@@ -582,9 +582,32 @@ diff -urNad libsbml-3.2.0~/configure.ac libsbml-3.2.0/configure.ac
  AC_CONFIG_FILES([./Makefile])
  
  AC_CONFIG_FILES([src/Makefile])
+diff -urNad libsbml-3.2.0~/src/annotation/test/Makefile.in libsbml-3.2.0/src/annotation/test/Makefile.in
+--- libsbml-3.2.0~/src/annotation/test/Makefile.in	2008-08-20 22:49:53.000000000 +0900
++++ libsbml-3.2.0/src/annotation/test/Makefile.in	2008-09-11 07:28:59.000000000 +0900
+@@ -122,8 +122,8 @@
+ # dependencies on other subdirectoris of the source tree, we do some rummaging
+ # around in .. and ../../subdirs.
+ 
+-tmp           = $(test_sources:.cpp=.$(OBJEXT)) $(test_sources:.c=.$(OBJEXT))
+-localobjfiles = $(filter %.$(OBJEXT),$(tmp))
++tmp           = $(test_sources:.cpp=.lo) $(test_sources:.c=.lo)
++localobjfiles = $(filter %.lo,$(tmp))
+ otherdirs     = .. ../../util ../../xml ../../math ../../sbml ../../validator \
+ 	../../validator/constraints ../../units ../../compress
+ 
+@@ -131,7 +131,7 @@
+   otherdirs +=	../../sbml/layout
+ endif
+ 
+-otherobjfiles = $(wildcard $(addsuffix /*.$(OBJEXT),$(otherdirs)))
++otherobjfiles = $(wildcard $(addsuffix /*.lo,$(otherdirs)))
+ test_objfiles = $(localobjfiles) $(otherobjfiles)
+ 
+ ifdef USE_LIBCHECK
 diff -urNad libsbml-3.2.0~/src/bindings/csharp/Makefile.in libsbml-3.2.0/src/bindings/csharp/Makefile.in
 --- libsbml-3.2.0~/src/bindings/csharp/Makefile.in	2008-08-20 22:50:07.000000000 +0900
-+++ libsbml-3.2.0/src/bindings/csharp/Makefile.in	2008-09-11 05:33:31.000000000 +0900
++++ libsbml-3.2.0/src/bindings/csharp/Makefile.in	2008-09-11 07:28:52.000000000 +0900
 @@ -95,9 +95,9 @@
  SWIGFLAGS        += $(CSHARP_SWIGFLAGS) -I../swig 
  SWIGFLAGS_WIN     = -DSWIGWIN -DSWIG_CSHARP_NO_WSTRING_HELPER
@@ -664,8 +687,8 @@ diff -urNad libsbml-3.2.0~/src/bindings/csharp/Makefile.in libsbml-3.2.0/src/bin
  installcheck:
  
 diff -urNad libsbml-3.2.0~/src/bindings/java/Makefile.in libsbml-3.2.0/src/bindings/java/Makefile.in
---- libsbml-3.2.0~/src/bindings/java/Makefile.in	2008-09-11 05:27:52.000000000 +0900
-+++ libsbml-3.2.0/src/bindings/java/Makefile.in	2008-09-11 05:27:53.000000000 +0900
+--- libsbml-3.2.0~/src/bindings/java/Makefile.in	2008-09-11 07:28:52.000000000 +0900
++++ libsbml-3.2.0/src/bindings/java/Makefile.in	2008-09-11 07:28:52.000000000 +0900
 @@ -60,9 +60,9 @@
  extra_CPPFLAGS    = $(JAVA_CPPFLAGS) -I../swig
  SWIGFLAGS        += $(JAVA_CPPFLAGS) -I../swig
@@ -710,7 +733,7 @@ diff -urNad libsbml-3.2.0~/src/bindings/java/Makefile.in libsbml-3.2.0/src/bindi
  uninstall:
 diff -urNad libsbml-3.2.0~/src/bindings/octave/Makefile.in libsbml-3.2.0/src/bindings/octave/Makefile.in
 --- libsbml-3.2.0~/src/bindings/octave/Makefile.in	2008-08-20 22:50:02.000000000 +0900
-+++ libsbml-3.2.0/src/bindings/octave/Makefile.in	2008-09-11 05:27:53.000000000 +0900
++++ libsbml-3.2.0/src/bindings/octave/Makefile.in	2008-09-11 07:28:52.000000000 +0900
 @@ -76,7 +76,7 @@
  # `extra_clean' and `extra_distclean' determine the files and directories
  # removed during "make clean" and "make distclean".
@@ -759,7 +782,7 @@ diff -urNad libsbml-3.2.0~/src/bindings/octave/Makefile.in libsbml-3.2.0/src/bin
  # -----------------------------------------------------------------------------
 diff -urNad libsbml-3.2.0~/src/bindings/perl/Makefile.PL.in libsbml-3.2.0/src/bindings/perl/Makefile.PL.in
 --- libsbml-3.2.0~/src/bindings/perl/Makefile.PL.in	2008-08-20 22:50:04.000000000 +0900
-+++ libsbml-3.2.0/src/bindings/perl/Makefile.PL.in	2008-09-11 05:27:53.000000000 +0900
++++ libsbml-3.2.0/src/bindings/perl/Makefile.PL.in	2008-09-11 07:28:52.000000000 +0900
 @@ -50,10 +50,9 @@
                MAKEFILE    => 'Makefile-perl',
                INSTALLDIRS => "site",
@@ -774,7 +797,7 @@ diff -urNad libsbml-3.2.0~/src/bindings/perl/Makefile.PL.in libsbml-3.2.0/src/bi
  	      MAN1PODS    => {},
 diff -urNad libsbml-3.2.0~/src/bindings/perl/Makefile.in libsbml-3.2.0/src/bindings/perl/Makefile.in
 --- libsbml-3.2.0~/src/bindings/perl/Makefile.in	2008-08-20 22:50:04.000000000 +0900
-+++ libsbml-3.2.0/src/bindings/perl/Makefile.in	2008-09-11 05:27:53.000000000 +0900
++++ libsbml-3.2.0/src/bindings/perl/Makefile.in	2008-09-11 07:28:52.000000000 +0900
 @@ -139,7 +139,9 @@
  	@ echo "Reconfigure --with-perl in order to build the perl-bindings"
  	exit 1
@@ -788,7 +811,7 @@ diff -urNad libsbml-3.2.0~/src/bindings/perl/Makefile.in libsbml-3.2.0/src/bindi
  # ExtUtil::Makemaker may ignore -lstdc++ option in some environments (e.g. MacOSX, cygwin)
 diff -urNad libsbml-3.2.0~/src/bindings/python/Makefile.in libsbml-3.2.0/src/bindings/python/Makefile.in
 --- libsbml-3.2.0~/src/bindings/python/Makefile.in	2008-08-20 22:50:03.000000000 +0900
-+++ libsbml-3.2.0/src/bindings/python/Makefile.in	2008-09-11 05:33:03.000000000 +0900
++++ libsbml-3.2.0/src/bindings/python/Makefile.in	2008-09-11 07:28:52.000000000 +0900
 @@ -56,6 +56,8 @@
    # to use -undefined dynamic_lookup.
    macosx_version=$(shell sw_vers -productVersion | cut -d"." -f1,2)
@@ -823,7 +846,7 @@ diff -urNad libsbml-3.2.0~/src/bindings/python/Makefile.in libsbml-3.2.0/src/bin
  # The default action is to remake everything.
 diff -urNad libsbml-3.2.0~/src/bindings/ruby/Makefile.in libsbml-3.2.0/src/bindings/ruby/Makefile.in
 --- libsbml-3.2.0~/src/bindings/ruby/Makefile.in	2008-08-20 22:50:05.000000000 +0900
-+++ libsbml-3.2.0/src/bindings/ruby/Makefile.in	2008-09-11 05:27:53.000000000 +0900
++++ libsbml-3.2.0/src/bindings/ruby/Makefile.in	2008-09-11 07:28:52.000000000 +0900
 @@ -79,7 +79,7 @@
  endif
  
@@ -864,9 +887,31 @@ diff -urNad libsbml-3.2.0~/src/bindings/ruby/Makefile.in libsbml-3.2.0/src/bindi
  
  # -----------------------------------------------------------------------------
  # Creating distribution (for libSBML maintainers only)
+diff -urNad libsbml-3.2.0~/src/math/test/Makefile.in libsbml-3.2.0/src/math/test/Makefile.in
+--- libsbml-3.2.0~/src/math/test/Makefile.in	2008-08-20 22:48:35.000000000 +0900
++++ libsbml-3.2.0/src/math/test/Makefile.in	2008-09-11 07:28:59.000000000 +0900
+@@ -119,15 +119,15 @@
+ # dependencies on other subdirectoris of the source tree, we do some rummaging
+ # around in .. and ../../subdirs.
+ 
+-tmp           = $(test_sources:.cpp=.$(OBJEXT)) $(test_sources:.c=.$(OBJEXT))
+-localobjfiles = $(filter %.$(OBJEXT),$(tmp))
++tmp           = $(test_sources:.cpp=.lo) $(test_sources:.c=.lo)
++localobjfiles = $(filter %.lo,$(tmp))
+ otherdirs     = .. ../../util ../../xml ../../sbml ../../annotation \
+ 	 ../../validator ../../validator/constraints ../../units ../../compress
+ 
+ ifdef USE_LAYOUT
+   otherdirs +=	../../sbml/layout
+ endif
+-otherobjfiles = $(wildcard $(addsuffix /*.$(OBJEXT),$(otherdirs)))
++otherobjfiles = $(wildcard $(addsuffix /*.lo,$(otherdirs)))
+ 
+ 
+ test_objfiles = $(localobjfiles) $(otherobjfiles)
 diff -urNad libsbml-3.2.0~/src/sbml/Makefile.in libsbml-3.2.0/src/sbml/Makefile.in
 --- libsbml-3.2.0~/src/sbml/Makefile.in	2008-08-20 22:49:54.000000000 +0900
-+++ libsbml-3.2.0/src/sbml/Makefile.in	2008-09-11 05:27:53.000000000 +0900
++++ libsbml-3.2.0/src/sbml/Makefile.in	2008-09-11 07:28:52.000000000 +0900
 @@ -180,19 +180,7 @@
  
  # The libraries are actually placed in the parent directory.
@@ -888,3 +933,121 @@ diff -urNad libsbml-3.2.0~/src/sbml/Makefile.in libsbml-3.2.0/src/sbml/Makefile.
  
  # `distfiles' determines the files and directories included in a distribution.
  # `distfiles_exclude' is used to filter out specific items, so that even if
+diff -urNad libsbml-3.2.0~/src/sbml/layout/test/Makefile.in libsbml-3.2.0/src/sbml/layout/test/Makefile.in
+--- libsbml-3.2.0~/src/sbml/layout/test/Makefile.in	2008-08-20 22:49:56.000000000 +0900
++++ libsbml-3.2.0/src/sbml/layout/test/Makefile.in	2008-09-11 07:28:59.000000000 +0900
+@@ -157,8 +157,8 @@
+ # dependencies on other subdirectoris of the source tree, we do some rummaging
+ # around in .. and ../../subdirs.
+ 
+-tmp           = $(test_sources:.cpp=.$(OBJEXT)) $(test_sources:.c=.$(OBJEXT))
+-localobjfiles = $(filter %.$(OBJEXT),$(tmp))
++tmp           = $(test_sources:.cpp=.lo) $(test_sources:.c=.lo)
++localobjfiles = $(filter %.lo,$(tmp))
+ 
+ otherdirs     = .. ../..  ../../../util ../../../xml ../../../math ../../../validator \
+                 ../../../validator/constraints ../../../annotation ../../../units \
+diff -urNad libsbml-3.2.0~/src/sbml/test/Makefile.in libsbml-3.2.0/src/sbml/test/Makefile.in
+--- libsbml-3.2.0~/src/sbml/test/Makefile.in	2008-08-20 22:49:56.000000000 +0900
++++ libsbml-3.2.0/src/sbml/test/Makefile.in	2008-09-11 07:28:59.000000000 +0900
+@@ -159,8 +159,8 @@
+ # dependencies on other subdirectoris of the source tree, we do some rummaging
+ # around in .. and ../../subdirs.
+ 
+-tmp           = $(test_sources:.cpp=.$(OBJEXT)) $(test_sources:.c=.$(OBJEXT))
+-localobjfiles = $(filter %.$(OBJEXT),$(tmp))
++tmp           = $(test_sources:.cpp=.lo) $(test_sources:.c=.lo)
++localobjfiles = $(filter %.lo,$(tmp))
+ 
+ otherdirs     = ..  ../../util ../../xml ../../math ../../units \
+                 ../../validator ../../validator/constraints ../../annotation \
+@@ -170,7 +170,7 @@
+   otherdirs += ../layout
+ endif
+ 
+-otherobjfiles = $(wildcard $(addsuffix /*.$(OBJEXT),$(otherdirs)))
++otherobjfiles = $(wildcard $(addsuffix /*.lo,$(otherdirs)))
+ 
+ test_objfiles = $(localobjfiles) $(otherobjfiles)
+ 
+diff -urNad libsbml-3.2.0~/src/units/test/Makefile.in libsbml-3.2.0/src/units/test/Makefile.in
+--- libsbml-3.2.0~/src/units/test/Makefile.in	2008-08-20 22:49:52.000000000 +0900
++++ libsbml-3.2.0/src/units/test/Makefile.in	2008-09-11 07:28:59.000000000 +0900
+@@ -148,8 +148,8 @@
+ # dependencies on other subdirectoris of the source tree, we do some rummaging
+ # around in .. and ../../subdirs.
+ 
+-tmp           = $(test_sources:.cpp=.$(OBJEXT)) $(test_sources:.c=.$(OBJEXT))
+-localobjfiles = $(filter %.$(OBJEXT),$(tmp))
++tmp           = $(test_sources:.cpp=.lo) $(test_sources:.c=.lo)
++localobjfiles = $(filter %.lo,$(tmp))
+ otherdirs     = .. ../../util ../../xml ../../math ../../sbml ../../validator \
+ 	../../validator/constraints ../../annotation ../../compress
+ 
+@@ -158,7 +158,7 @@
+ endif
+ 
+ 
+-otherobjfiles = $(wildcard $(addsuffix /*.$(OBJEXT),$(otherdirs)))
++otherobjfiles = $(wildcard $(addsuffix /*.lo,$(otherdirs)))
+ test_objfiles = $(localobjfiles) $(otherobjfiles)
+ 
+ ifdef USE_LIBCHECK
+diff -urNad libsbml-3.2.0~/src/util/test/Makefile.in libsbml-3.2.0/src/util/test/Makefile.in
+--- libsbml-3.2.0~/src/util/test/Makefile.in	2008-08-20 22:48:31.000000000 +0900
++++ libsbml-3.2.0/src/util/test/Makefile.in	2008-09-11 07:28:59.000000000 +0900
+@@ -121,10 +121,10 @@
+ # for running check are abstracted out into makefile-common-actions.mk,
+ # which is included at the bottom of this file.
+ 
+-tmp     = $(test_sources:.cpp=.$(OBJEXT)) $(test_sources:.c=.$(OBJEXT))
+-objects = $(filter %.$(OBJEXT),$(tmp))
++tmp     = $(test_sources:.cpp=.lo) $(test_sources:.c=.lo)
++objects = $(filter %.lo,$(tmp))
+ 
+-test_objfiles = $(objects) $(wildcard ../*.$(OBJEXT))
++test_objfiles = $(objects) $(wildcard ../*.lo)
+ 
+ ifdef USE_LIBCHECK
+   check: all run-checks
+diff -urNad libsbml-3.2.0~/src/validator/test/Makefile.in libsbml-3.2.0/src/validator/test/Makefile.in
+--- libsbml-3.2.0~/src/validator/test/Makefile.in	2008-08-20 22:48:39.000000000 +0900
++++ libsbml-3.2.0/src/validator/test/Makefile.in	2008-09-11 07:28:59.000000000 +0900
+@@ -155,8 +155,8 @@
+ # dependencies on other subdirectoris of the source tree, we do some rummaging
+ # around in .. and ../../subdirs.
+ 
+-tmp           = $(test_sources:.cpp=.$(OBJEXT)) $(test_sources:.c=.$(OBJEXT))
+-localobjfiles = $(filter %.$(OBJEXT),$(tmp))
++tmp           = $(test_sources:.cpp=.lo) $(test_sources:.c=.lo)
++localobjfiles = $(filter %.lo,$(tmp))
+ otherdirs     = .. ../constraints ../../util ../../xml ../../math ../../sbml \
+ 	 ../../units ../../annotation ../../compress
+ 
+@@ -164,7 +164,7 @@
+   otherdirs += ../../sbml/layout
+ endif
+ 
+-otherobjfiles = $(wildcard $(addsuffix /*.$(OBJEXT),$(otherdirs)))
++otherobjfiles = $(wildcard $(addsuffix /*.lo,$(otherdirs)))
+ test_objfiles = $(localobjfiles) $(otherobjfiles)
+ 
+ 
+diff -urNad libsbml-3.2.0~/src/xml/test/Makefile.in libsbml-3.2.0/src/xml/test/Makefile.in
+--- libsbml-3.2.0~/src/xml/test/Makefile.in	2008-08-20 22:48:34.000000000 +0900
++++ libsbml-3.2.0/src/xml/test/Makefile.in	2008-09-11 07:28:59.000000000 +0900
+@@ -127,11 +127,11 @@
+ # dependencies on other subdirectoris of the source tree, we do some rummaging
+ # around in .. and ../../subdirs.
+ 
+-tmp           = $(test_sources:.cpp=.$(OBJEXT)) $(test_sources:.c=.$(OBJEXT))
+-localobjfiles = $(filter %.$(OBJEXT),$(tmp))
++tmp           = $(test_sources:.cpp=.lo) $(test_sources:.c=.lo)
++localobjfiles = $(filter %.lo,$(tmp))
+ 
+ otherdirs     = .. ../../util ../../compress
+-otherobjfiles = $(wildcard $(addsuffix /*.$(OBJEXT),$(otherdirs)))
++otherobjfiles = $(wildcard $(addsuffix /*.lo,$(otherdirs)))
+ 
+ test_objfiles = $(localobjfiles) $(otherobjfiles)
+ 
