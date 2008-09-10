@@ -185,7 +185,7 @@ diff -urNad libsbml-3.2.0~/config/lt_link_helper.sh.in libsbml-3.2.0/config/lt_l
 +    exit
 +fi
 +
-+linker_tmpdir=`mktemp -d`
++linker_tmpdir=`mktemp -d XXXXXXXX`
 +stage_dir="${linker_tmpdir}/stage"
 +mkdir -p "${stage_dir}/${libdir}"
 +
