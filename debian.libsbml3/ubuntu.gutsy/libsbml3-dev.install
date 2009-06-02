@@ -1,5 +1,0 @@
-usr/include/sbml/*
-usr/lib/libsbml.a
-usr/lib/libsbml.la
-usr/lib/libsbml.so
-usr/lib/pkgconfig/libsbml.pc

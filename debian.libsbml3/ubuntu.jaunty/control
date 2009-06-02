@@ -3,7 +3,7 @@ Priority: optional
 Maintainer: Steffen Moeller <moeller@pzr.uni-rostock.de>, Changyan Xie <panchoat@gmail.com>, Moriyoshi Koizumi <mozo@sfc.keio.ac.jp>
 Build-Depends: debhelper (>= 4.0.0), dpatch, bash, autoconf, automake, ruby,
  libtool (>= 1.5.0), build-essential, libxml2-dev, python-dev, ruby1.8-dev,
- libperl-dev, openjdk-6-jdk | java-gcj-compat-dev | java-sdk, octave2.9-headers, fastjar,
+ libperl-dev, openjdk-6-jdk | java-gcj-compat-dev | java-sdk, octave3.0-headers, fastjar,
  python-support (>= 0.3), doxygen, graphviz, libz-dev, libbz2-dev,
  cli-common-dev, cli-runtime
 Standards-Version: 3.7.2
