@@ -1,0 +1,22 @@
+#! /bin/sh /usr/share/dpatch/dpatch-run
+## 09_docs_install_mkinstalldirs.dpatch by  <mozo@sfc.keio.ac.jp>
+##
+## All lines beginning with `## DP:' are a description of the patch.
+## DP: No description.
+
+@DPATCH@
+diff -urNad libsbml-3.3.2~/docs/src/Makefile.in libsbml-3.3.2/docs/src/Makefile.in
+--- libsbml-3.3.2~/docs/src/Makefile.in	2009-03-04 08:26:10.000000000 +0900
++++ libsbml-3.3.2/docs/src/Makefile.in	2009-06-06 12:57:04.001386655 +0900
+@@ -434,8 +434,9 @@
+ 	  list='$(docs)'; for docdir in $$list; do \
+ 	    if test -d $$docdir; then d=.; else d=$(srcdir); fi; \
+ 	    dirname=`basename "$$docdir"`; \
++	    $(MKINSTALLDIRS) "$(DESTDIR)$(DOCDIR)"; \
+ 	    if test "$$dirname" != "$$docdir" && test "$$dirname" != "."; then \
+-	      $(MKINSTALLDIRS) "$(DESTDIR)$(DOCDIR)/$$dirname"; \
++	      mkdir "$(DESTDIR)$(DOCDIR)/$$dirname"; \
+ 	    fi; \
+ 	    echo Copying to $(DESTDIR)$(DOCDIR)/$$dirname; \
+ 	    if test -d $$d/$$docdir; then \
+
