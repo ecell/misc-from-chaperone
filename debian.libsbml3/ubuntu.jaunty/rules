@@ -46,19 +46,19 @@ patch-stamp:
 config.status: patch-stamp configure
 	dh_testdir
 	# Add here commands to configure the package.
-	MONO_SHARED_DIR="$(CURDIR)" CFLAGS="$(CFLAGS)" LDFLAGS="-Wl,-z,defs" \
+	MONO_SHARED_DIR="$(CURDIR)" CFLAGS="$(CFLAGS)" \
 	./configure --host=$(DEB_HOST_GNU_TYPE) \
 	            --build=$(DEB_BUILD_GNU_TYPE) \
 	            --prefix=/usr \
 	            --mandir=\$${prefix}/share/man \
 	            --infodir=\$${prefix}/share/info \
+	            --with-doxygen=/usr \
 	            --with-perl=/usr \
 	            --with-python=/usr \
 	            --with-java=/usr \
 	            --with-ruby=/usr \
 	            --with-octave=/usr \
-	            --with-csharp=/usr \
-	            --with-csharp-compiler=/usr/bin/mcs
+	            --with-csharp=/usr
 	touch \
 		src/bindings/java/java-files \
 		src/bindings/java/libsbml_wrap.cpp \

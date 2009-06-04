@@ -1,4 +1,4 @@
-#01_java_cleanup_prevention        
+#01_java_cleanup_prevention
 02_libtool_support
 #03_gcj_support
 #04_docs_destdir
@@ -6,3 +6,4 @@
 06_javadoc_discovery
 #07_perldoc_mod_name_fix
 08_pkgconfig_file_gen
+09_docs_install_mkinstalldirs.dpatch
