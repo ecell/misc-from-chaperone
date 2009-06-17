@@ -3,9 +3,8 @@ Priority: optional
 Maintainer: Steffen Moeller <moeller@pzr.uni-rostock.de>, Changyan Xie <panchoat@gmail.com>, Moriyoshi Koizumi <mozo@sfc.keio.ac.jp>
 Build-Depends: debhelper (>= 4.0.0), dpatch, bash, autoconf, automake, ruby,
  libtool (>= 1.5.0), build-essential, libxml2-dev, python-dev, ruby1.8-dev,
- libperl-dev, openjdk-6-jdk | java-gcj-compat-dev | java-sdk, octave3.0-headers, fastjar,
- python-support (>= 0.3), doxygen, graphviz, libz-dev, libbz2-dev,
- cli-common-dev, cli-runtime
+ libperl-dev, openjdk-6-jdk | java-gcj-compat-dev | java-sdk, octave3.0-headers, fastjar, python-support (>= 0.3), doxygen, graphviz, libz-dev, libbz2-dev,
+ c-sharp-compiler, cli-common-dev (>= 0.4.4), cli-runtime
 Standards-Version: 3.7.2
 Section: contrib/science
 XS-Vcs-Browser: http://svn.debian.org/wsvn/debian-med/trunk/packages/libsbml/trunk/
@@ -65,7 +64,7 @@ Section: contrib/python
 Provides: ${python:Provides}, python-sbml
 Conflicts: python-sbml2
 Architecture: any
-Depends: ${shlibs:Depends}, ${misc:Depends}, ${python:Depends}
+Depends: libsbml3, ${misc:Depends}, ${python:Depends}
 Description: System Biology Markup Language Library -- Python Binding
  LibSBML is a library designed to help you read, write, manipulate, 
  translate, and validate SBML files and data streams. It is not an 
@@ -90,7 +89,7 @@ Package: libsbml3-ruby1.8
 Section: contrib/libs
 Provides: libsbml3-ruby
 Architecture: any
-Depends: ${shlibs:Depends}, ${misc:Depends}
+Depends: libsbml3, ${misc:Depends}
 Description: System Biology Markup Language Library -- Ruby Binding
  LibSBML is a library designed to help you read, write, manipulate, 
  translate, and validate SBML files and data streams. It is not an 
@@ -116,7 +115,7 @@ Section: contrib/libs
 Provides: libsbml-java
 Conflicts: libsbml2-java
 Architecture: any
-Depends: ${shlibs:Depends}, ${misc:Depends}
+Depends: libsbml3, ${misc:Depends}
 Description: System Biology Markup Language Library -- Java Binding
  LibSBML is a library designed to help you read, write, manipulate, 
  translate, and validate SBML files and data streams. It is not an 
@@ -141,7 +140,7 @@ Package: libsbml3-perl
 Section: contrib/perl
 Provides: libsbml-perl
 Conflicts: libsbml2-perl
-Depends: ${shlibs:Depends}, ${perl:Depends}, ${misc:Depends}
+Depends: libsbml3, ${perl:Depends}, ${misc:Depends}
 Architecture: any
 Description: System Biology Markup Language Library -- Perl binding
  LibSBML is a library designed to help you read, write, manipulate, 
@@ -165,7 +164,7 @@ Description: System Biology Markup Language Library -- Perl binding
 
 Package: libsbml3-octave
 Section: contrib/math
-Depends: ${shlibs:Depends}, ${misc:Depends}, octave
+Depends: libsbml3, ${misc:Depends}, octave
 Architecture: any
 Description: System Biology Markup Language Library -- Octave binding
  LibSBML is a library designed to help you read, write, manipulate, 
@@ -189,7 +188,7 @@ Description: System Biology Markup Language Library -- Octave binding
 
 Package: libsbml3-cil
 Section: contrib/libs
-Depends: ${shlibs:Depends}, ${misc:Depends}, ${cli:Depends}
+Depends: libsbml3, ${misc:Depends}, ${cli:Depends}
 Architecture: any
 Description: System Biology Markup Language Library -- CLR binding
  LibSBML is a library designed to help you read, write, manipulate, 

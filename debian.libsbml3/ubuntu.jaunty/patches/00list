@@ -6,4 +6,5 @@
 06_javadoc_discovery
 #07_perldoc_mod_name_fix
 08_pkgconfig_file_gen
-09_docs_install_mkinstalldirs.dpatch
+09_docs_install_mkinstalldirs
+10_perl_binding_instdir

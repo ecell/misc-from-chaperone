@@ -37,7 +37,7 @@ major=2
 patch: patch-stamp
 patch-stamp:
 	dpatch apply-all
-	libtoolize -c -f
+	libtoolize -c -f -i
 	aclocal -Iconfig
 	autoconf
 	eval `bash ./debian/jvm-find.sh` && javac -cp $$JAVA_HOME/lib/tools.jar -sourcepath docs/src -d docs/src docs/src/ExcludeDoclet.java
@@ -134,18 +134,19 @@ binary-arch: build install
 	dh_installchangelogs
 	dh_installdocs
 	dh_installexamples
-	dh_install -Xlibsbml-java --sourcedir=$(CURDIR)/debian/tmp
+	dh_install --sourcedir=$(CURDIR)/debian/tmp
 	dh_link
 	dh_strip
 	dh_compress
 	dh_fixperms
+	dh_makeshlibs
+	dh_makeclilibs -a -V
+	dh_installcligac -a
 	dh_perl
 	dh_pysupport
-	dh_makeshlibs
-	dh_makeclilibs
 	dh_installdeb
-	dh_shlibdeps
-	dh_clideps
+	dh_shlibdeps -Xlibsbml3-cil -Xlibsbml3-octave -Xlibsbml3-perl -Xlibsbml3-java -Xpython-sbml3 -Xlibsbml3-ruby1.8
+	dh_clideps -a -d -ldebian/libsbml3-cli/usr
 	dh_gencontrol
 	dh_md5sums
 	dh_builddeb

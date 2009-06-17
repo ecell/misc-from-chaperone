@@ -280,27 +280,35 @@ diff -urNad libsbml-3.3.2~/config/makefile-common-actions.mk libsbml-3.3.2/confi
  
  # The following define default values of variables like `cxxcompile'.  An
  # enclosing makefile can define other values, in which case those
-@@ -50,20 +50,14 @@
+@@ -53,28 +53,20 @@
+ use_gcc   = $(shell $(CXX) -dumpversion 2>&1 | grep '^[34]\.' )
+ use_suncc = $(shell $(CXX) -V 2>&1 | grep 'Sun C++' )
  
- default_includes ?= -I. -I$(top_include)
- 
--# Compiling under cygwin doesn't need -fPIC.
+-# Compiling under cygwin and Sun cc doesn't need -fPIC.
 -
 -ifneq "$(HOST_TYPE)" "cygwin"
--  FPIC = -fPIC
+-  ifeq "$(use_suncc)" ""
+-    FPIC = -fPIC
+-  endif
 -endif
 -
+ # Compiling under Sun cc must not use -Wall.
+ 
+ ifeq "$(use_suncc)" ""
+   WALL = -Wall
+ endif
+ 
  # Here follow the generic compilation commands.  (Note: the use of 'sort'
  # here is only to remove duplicates, which the 'sort' function does as a
  # documented side-effect.)
  
--compile ?= $(CC) $(FPIC) $(sort $(default_includes) $(INCLUDES)) $(CPPFLAGS) \
+-compile ?= $(CC) $(FPIC) $(WALL) $(sort $(default_includes) $(INCLUDES)) $(CPPFLAGS) \
 -	$(extra_CPPFLAGS) $(CFLAGS) $(extra_CFLAGS) 
-+compile ?= $(LIBTOOL) --mode=compile $(CC) $(FPIC) $(sort $(default_includes) $(INCLUDES)) $(CPPFLAGS) \
++compile ?= $(LIBTOOL) --mode=compile $(CC) $(FPIC) $(WALL) $(sort $(default_includes) $(INCLUDES)) $(CPPFLAGS) \
 +	$(extra_CPPFLAGS) $(CFLAGS) $(extra_CFLAGS)
  
--cxxcompile ?= $(CXX) $(FPIC) $(sort $(default_includes) $(INCLUDES)) $(CPPFLAGS) \
-+cxxcompile ?= $(LIBTOOL) --mode=compile $(CXX) $(FPIC) $(sort $(default_includes) $(INCLUDES)) $(CPPFLAGS) \
+-cxxcompile ?= $(CXX) $(FPIC) $(WALL) $(sort $(default_includes) $(INCLUDES)) $(CPPFLAGS) \
++cxxcompile ?= $(LIBTOOL) --mode=compile $(CXX) $(FPIC) $(WALL) $(sort $(default_includes) $(INCLUDES)) $(CPPFLAGS) \
  	$(extra_CPPFLAGS) $(CXXFLAGS) $(extra_CXXFLAGS) 
  
  # The following two commands are used for dependency tracking only when 
@@ -348,7 +356,7 @@ diff -urNad libsbml-3.3.2~/config/makefile-common-actions.mk libsbml-3.3.2/confi
  
  # This next line includes the dependency files.  This doesn't use
  # $depfiles, but rather a wildcard on the actual files, so that if they
-@@ -175,86 +180,19 @@
+@@ -175,95 +180,27 @@
  
  endif
  
@@ -399,7 +407,11 @@ diff -urNad libsbml-3.3.2~/config/makefile-common-actions.mk libsbml-3.3.2/confi
 -.c.$(OBJEXT):
 -ifndef USE_UNIVBINARY
 +.c.lo:
+   ifneq "$(use_suncc)" ""
+ 	$(compile) -c -o $@ $<
+   else
  	$(compile) -MT $@ -MD -MP -MF "$(DEPDIR)/$*.$(DEPEXT)" -c -o $@ $<
+   endif
 -else
 -	$(compile_nocflags) -MT $@ -MM -MP -MF "$(DEPDIR)/$*.$(DEPEXT)" $<
 -	$(compile) -c -o $@ $<
@@ -415,11 +427,16 @@ diff -urNad libsbml-3.3.2~/config/makefile-common-actions.mk libsbml-3.3.2/confi
 -.cpp.$(OBJEXT) .cxx.$(OBJEXT):
 -ifndef USE_UNIVBINARY
 +.cpp.lo .cxx.lo:
+   ifneq "$(use_suncc)" ""
+ 	$(cxxcompile) -c -o $@ $<
+   else
  	$(cxxcompile) -MT $@ -MD -MP -MF "$(DEPDIR)/$*.$(DEPEXT)" -c -o $@ $<
+   endif
 -else
 -	$(cxxcompile_nocxxflags) -MT $@ -MM -MP -MF "$(DEPDIR)/$*.$(DEPEXT)" $<
 -	$(cxxcompile) -c -o $@ $<
 -endif
+-
 -
 -.cpp.obj:
 -	if $(cxxcompile) -MT $@ -MD -MP -MF "$(DEPDIR)/$*.Tpo" \
